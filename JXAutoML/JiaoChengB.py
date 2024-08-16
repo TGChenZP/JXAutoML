@@ -140,7 +140,7 @@ class JiaoChengB:
             tmp = self._sort_with_none(tmp)
             self.parameter_choices[key] = tuple(tmp)
 
-    def _sort_with_none(lst):
+    def _sort_with_none(self, lst):
         """ Helper to sort hyperparameters with None values """
         if None in lst:
             no_none_list = [i for i in lst if i is not None]
