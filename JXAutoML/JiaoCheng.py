@@ -407,11 +407,11 @@ class JiaoCheng:
             except:
                 pass
             try:
-                metrics_dict['val_score'] = r2_score(self.val_y, val_pred)
+                metrics_dict['val_r2'] = r2_score(self.val_y, val_pred)
             except:
                 pass
             try:
-                metrics_dict['test_score'] = r2_score(self.test_y, test_pred)
+                metrics_dict['test_r2'] = r2_score(self.test_y, test_pred)
             except:
                 pass
 
@@ -587,9 +587,9 @@ class JiaoCheng:
             df_building_dict['Train accuracy'] = [
                 np.round(metrics_dict.get('train_accuracy', 0), 6)]
             df_building_dict['Val accuracy'] = [
-                np.round(metrics_dict.get('val_score', 0), 6)]
+                np.round(metrics_dict.get('val_accuracy', 0), 6)]
             df_building_dict['Test accuracy'] = [
-                np.round(metrics_dict.get('test_score', 0), 6)]
+                np.round(metrics_dict.get('val_accuracy', 0), 6)]
             df_building_dict['Train f1'] = [
                 np.round(metrics_dict.get('train_f1', 0), 6)]
             df_building_dict['Val f1'] = [
@@ -642,11 +642,11 @@ class JiaoCheng:
         if self._tune_features == True:
             del params['features']
             tmp_train_x = self.train_x[list(
-                self._feature_combo_n_index_map[combo['features'][0]])]
+                self._feature_combo_n_index_map[combo[-1]])]
             tmp_val_x = self.val_x[list(
-                self._feature_combo_n_index_map[combo['features'][0]])]
+                self._feature_combo_n_index_map[combo[-1]])]
             tmp_test_x = self.test_x[list(
-                self._feature_combo_n_index_map[combo['features'][0]])]
+                self._feature_combo_n_index_map[combo[-1]])]
 
             if self.pytorch_model:
                 params['input_dim'] = len(
@@ -660,11 +660,11 @@ class JiaoCheng:
             clf = self.model(**params)
 
             params['features'] = [
-                list(self._feature_combo_n_index_map[combo['features'][0]])]
+                list(self._feature_combo_n_index_map[combo[-1]])]
             params['n_columns'] = len(
-                list(self._feature_combo_n_index_map[combo['features'][0]]))
-            params['n_features'] = combo['features'][0]
-            params['feature combo ningxiang score'] = self.feature_n_ningxiang_score_dict[self._feature_combo_n_index_map[combo['features'][0]]]
+                list(self._feature_combo_n_index_map[combo[-1]]))
+            params['n_features'] = combo[-1]
+            params['feature combo ningxiang score'] = self.feature_n_ningxiang_score_dict[self._feature_combo_n_index_map[combo[-1]]]
 
         else:
             tmp_train_x = self.train_x
