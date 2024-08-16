@@ -107,9 +107,9 @@ class YangZhouB:
             assert optimised_metric in [
                 None, 'r2', 'rmse', 'mape'], "evaluation_metric for regression must be one of ['r2', 'rmse', 'mape']"
 
-        if self.clf == 'Classification':
+        if self.clf_type == 'Classification':
             self.optimised_metric = 'accuracy' if optimised_metric is None else optimised_metric
-        elif self.clf == 'Regression':
+        elif self.clf_type == 'Regression':
             self.optimised_metric = 'r2' if optimised_metric is None else optimised_metric
 
         # record
