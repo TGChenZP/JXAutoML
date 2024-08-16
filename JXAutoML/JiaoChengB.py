@@ -641,7 +641,7 @@ class JiaoChengB:
                 df_building_dict['Test AUC'] = [
                     np.round(metrics_dict.get('test_auc', 0), 6)]
 
-        return df_building_dict, df_building_dict[f'Val {self.optimised_metric}'], df_building_dict[f'Test {self.optimised_metric}']
+        return df_building_dict, metrics_dict[f'val_{self.optimised_metric}'], metrics_dict[f'test_{self.optimised_metric}']
 
     def _train_and_test_combo(self, combo):
         """ Helper to train and test each combination as part of tune() """
