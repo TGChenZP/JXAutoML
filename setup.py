@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="JXAutoML",  # Replace with your package name
-    version="0.2.1",
+    version="0.2.6",
     author="Lang Chen",
     author_email="ronchen6666@gmail.com",
     description="Advanced HyperParameter Tuning",
