@@ -405,6 +405,8 @@ class YangZhouB:
             # only search if it hasn't been cruised before (if has then is not an artifect of significance)
             if not self.been_cruised[tuple(cruise_combo)]:
 
+                self._cruising_up_to += 1
+
                 print(
                     f'Cruising Coordrdinate {self._cruising_up_to} of {self._n_cruise_coord}\n')
 

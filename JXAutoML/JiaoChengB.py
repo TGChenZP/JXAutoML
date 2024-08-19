@@ -349,7 +349,7 @@ class JiaoChengB:
 
         for starting_feature_index in range(len(self.hyperparameters)):
 
-            if starting_feature_index != 1:
+            if starting_feature_index != 0:
                 tmp_hyperparameter_tuning_order = tmp_hyperparameter_tuning_order[
                     1:] + tmp_hyperparameter_tuning_order[:1]
 
