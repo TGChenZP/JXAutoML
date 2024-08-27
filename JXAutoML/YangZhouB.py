@@ -11,19 +11,27 @@ from scipy.stats import t
 from collections import defaultdict as dd
 
 from sklearn.metrics import r2_score, mean_absolute_percentage_error, mean_squared_error
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, balanced_accuracy_score, average_precision_score, roc_auc_score
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    precision_score,
+    recall_score,
+    balanced_accuracy_score,
+    average_precision_score,
+    roc_auc_score,
+)
 
 
 class YangZhouB:
 
     def __init__(self):
-        """ Initialise class """
+        """Initialise class"""
         self._initialise_objects()
 
-        print('YangZhouB Initialised')
+        print("YangZhouB Initialised")
 
     def _initialise_objects(self):
-        """ Helper to initialise objects """
+        """Helper to initialise objects"""
         self.train_x = None
         self.train_y = None
         self.val_x = None
@@ -43,7 +51,7 @@ class YangZhouB:
         self.been_cruised = None
         self.tuning_result_saving_address = None
         self._parameter_value_map_index = None
-        self._seed = 19260817
+        self._seed = 42
         self.best_score = -np.inf
         self.best_combo = None
         self.best_clf = None
@@ -66,14 +74,39 @@ class YangZhouB:
         self.pytorch_model = False
         self.optimised_metric = False
 
-        self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2',
-                                                'Train rmse', 'Val rmse', 'Test rmse', 'Train mape', 'Val mape', 'Test mape', 'Time']
-        self.classification_extra_output_columns = ['Train accuracy', 'Val accuracy', 'Test accuracy',
-                                                    'Train balanced_accuracy', 'Val balanced_accuracy', 'Test balanced_accuracy', 'Train f1', 'Val f1', 'Test f1',
-                                                    'Train precision', 'Val precision', 'Test precision', 'Train recall', 'Val recall', 'Test recall', 'Time']
+        self.regression_extra_output_columns = [
+            "Train r2",
+            "Val r2",
+            "Test r2",
+            "Train rmse",
+            "Val rmse",
+            "Test rmse",
+            "Train mape",
+            "Val mape",
+            "Test mape",
+            "Time",
+        ]
+        self.classification_extra_output_columns = [
+            "Train accuracy",
+            "Val accuracy",
+            "Test accuracy",
+            "Train balanced_accuracy",
+            "Val balanced_accuracy",
+            "Test balanced_accuracy",
+            "Train f1",
+            "Val f1",
+            "Test f1",
+            "Train precision",
+            "Val precision",
+            "Test precision",
+            "Train recall",
+            "Val recall",
+            "Test recall",
+            "Time",
+        ]
 
     def read_in_data(self, train_x, train_y, val_x, val_y, test_x, test_y):
-        """ Reads in train validate test data for tuning """
+        """Reads in train validate test data for tuning"""
 
         self.train_x = train_x
         print("Read in Train X data")
@@ -94,23 +127,39 @@ class YangZhouB:
         print("Read in Test y data")
 
     def read_in_model(self, model, type, optimised_metric=None, pytorch_model=False):
-        """ Reads in underlying model object for tuning, and also read in what type of model it is """
+        """Reads in underlying model object for tuning, and also read in what type of model it is"""
 
-        assert type == 'Classification' or type == 'Regression'  # check
+        assert type == "Classification" or type == "Regression"  # check
 
         self.clf_type = type
 
-        if self.clf_type == 'Classification':
-            assert optimised_metric in [None, 'accuracy', 'f1', 'precision',
-                                        'recall', 'balanced_accuracy', 'AP', 'AUC'], "evaluation_metric for classification must be one of ['accuracy', 'f1', 'precision', 'recall', 'balanced_accuracy', 'AP', 'AUC']"
-        if self.clf_type == 'Regression':
+        if self.clf_type == "Classification":
             assert optimised_metric in [
-                None, 'r2', 'rmse', 'mape'], "evaluation_metric for regression must be one of ['r2', 'rmse', 'mape']"
+                None,
+                "accuracy",
+                "f1",
+                "precision",
+                "recall",
+                "balanced_accuracy",
+                "AP",
+                "AUC",
+            ], "evaluation_metric for classification must be one of ['accuracy', 'f1', 'precision', 'recall', 'balanced_accuracy', 'AP', 'AUC']"
+        if self.clf_type == "Regression":
+            assert optimised_metric in [
+                None,
+                "r2",
+                "rmse",
+                "mape",
+            ], "evaluation_metric for regression must be one of ['r2', 'rmse', 'mape']"
 
-        if self.clf_type == 'Classification':
-            self.optimised_metric = 'accuracy' if optimised_metric is None else optimised_metric
-        elif self.clf_type == 'Regression':
-            self.optimised_metric = 'r2' if optimised_metric is None else optimised_metric
+        if self.clf_type == "Classification":
+            self.optimised_metric = (
+                "accuracy" if optimised_metric is None else optimised_metric
+            )
+        elif self.clf_type == "Regression":
+            self.optimised_metric = (
+                "r2" if optimised_metric is None else optimised_metric
+            )
 
         # record
         self.model = model
@@ -118,10 +167,11 @@ class YangZhouB:
         self.pytorch_model = pytorch_model
 
         print(
-            f'Successfully read in model {self.model}, which is a {self.clf_type} model optimising for {self.optimised_metric}')
+            f"Successfully read in model {self.model}, which is a {self.clf_type} model optimising for {self.optimised_metric}"
+        )
 
     def set_hyperparameters(self, parameter_choices):
-        """ Input hyperparameter choices """
+        """Input hyperparameter choices"""
 
         self.parameter_choices = parameter_choices
         self._sort_hyperparameter_choices()
@@ -129,10 +179,11 @@ class YangZhouB:
         self.hyperparameters = list(parameter_choices.keys())
 
         # automatically calculate how many different values in each hyperparameter
-        self.n_items = [len(parameter_choices[key])
-                        for key in self.hyperparameters]
-        self.num_hyperparameters = {hyperparameter: len(
-            parameter_choices[hyperparameter]) for hyperparameter in self.hyperparameters}
+        self.n_items = [len(parameter_choices[key]) for key in self.hyperparameters]
+        self.num_hyperparameters = {
+            hyperparameter: len(parameter_choices[hyperparameter])
+            for hyperparameter in self.hyperparameters
+        }
         self._total_combos = np.prod(self.n_items)
 
         # automatically setup checked and result arrays and tuning result dataframe
@@ -142,7 +193,7 @@ class YangZhouB:
         print("Successfully recorded hyperparameter choices")
 
     def _sort_hyperparameter_choices(self):
-        """ Helper to ensure all hyperparameter choice values are in order from lowest to highest """
+        """Helper to ensure all hyperparameter choice values are in order from lowest to highest"""
 
         for key in self.parameter_choices:
             tmp = copy.deepcopy(list(self.parameter_choices[key]))
@@ -150,17 +201,17 @@ class YangZhouB:
             self.parameter_choices[key] = tuple(tmp)
 
     def _sort_with_none(self, lst):
-        """ Helper to sort hyperparameters with None values """
+        """Helper to sort hyperparameters with None values"""
         if None in lst:
             no_none_list = [i for i in lst if i is not None]
             no_none_list.sort()
-            no_none_list = [None]+no_none_list
+            no_none_list = [None] + no_none_list
             return no_none_list
         lst.sort()
         return lst
 
     def _get_checked_and_result_array(self):
-        """ Helper to set up checked and result array """
+        """Helper to set up checked and result array"""
 
         self.checked = np.zeros(shape=self.n_items)
         self.result = np.zeros(shape=self.n_items)
@@ -170,61 +221,70 @@ class YangZhouB:
         self.been_cruised = np.zeros(shape=self.n_items)
 
     def _setup_tuning_result_df(self):
-        """ Helper to set up tuning result dataframe """
+        """Helper to set up tuning result dataframe"""
 
         tune_result_columns = copy.deepcopy(self.hyperparameters)
 
         if self._tune_features:
-            tune_result_columns.append('feature combo ningxiang score')
+            tune_result_columns.append("feature combo ningxiang score")
 
         # Different set of metric columns for different types of models
-        if self.clf_type == 'Classification':
-            tune_result_columns.extend(
-                self.classification_extra_output_columns)
-        elif self.clf_type == 'Regression':
+        if self.clf_type == "Classification":
+            tune_result_columns.extend(self.classification_extra_output_columns)
+        elif self.clf_type == "Regression":
             tune_result_columns.extend(self.regression_extra_output_columns)
 
-        self.tuning_result = pd.DataFrame(
-            {col: list() for col in tune_result_columns})
+        self.tuning_result = pd.DataFrame({col: list() for col in tune_result_columns})
 
     def set_non_tuneable_hyperparameters(self, non_tuneable_hyperparameter_choice):
-        """ Input Non tuneable hyperparameter choice """
+        """Input Non tuneable hyperparameter choice"""
 
         if type(non_tuneable_hyperparameter_choice) is not dict:
             raise TypeError(
-                'non_tuneable_hyeprparameters_choice must be dict, please try again')
+                "non_tuneable_hyeprparameters_choice must be dict, please try again"
+            )
 
         for nthp in non_tuneable_hyperparameter_choice:
-            if type(non_tuneable_hyperparameter_choice[nthp]) in (set, list, tuple, dict):
+            if type(non_tuneable_hyperparameter_choice[nthp]) in (
+                set,
+                list,
+                tuple,
+                dict,
+            ):
                 raise TypeError(
-                    'non_tuneable_hyperparameters_choice must not be of array-like type')
+                    "non_tuneable_hyperparameters_choice must not be of array-like type"
+                )
 
         self.non_tuneable_parameter_choices = non_tuneable_hyperparameter_choice
 
         print("Successfully recorded non_tuneable_hyperparameter choices")
 
     def set_features(self, ningxiang_output):
-        """ Input features """
+        """Input features"""
 
         if type(ningxiang_output) is not dict:
             raise TypeError("Please ensure NingXiang output is a dict")
 
         if not self.hyperparameters:
             raise AttributeError(
-                "Missing hyperparameter choices, please run .set_hyperparameters() first")
+                "Missing hyperparameter choices, please run .set_hyperparameters() first"
+            )
 
         for feature in list(ningxiang_output.keys())[-1]:
             if feature not in list(self.train_x.columns):
                 raise ValueError(
-                    f'feature {feature} in ningxiang output is not in train_x. Please try again')
+                    f"feature {feature} in ningxiang output is not in train_x. Please try again"
+                )
 
             if feature not in list(self.val_x.columns):
                 raise ValueError(
-                    f'feature {feature} in ningxiang output is not in val_x. Please try again')
+                    f"feature {feature} in ningxiang output is not in val_x. Please try again"
+                )
 
             if feature not in list(self.test_x.columns):
                 raise ValueError(
-                    f'feature {feature} in ningxiang output is not in test_x. Please try again')
+                    f"feature {feature} in ningxiang output is not in test_x. Please try again"
+                )
 
         # sort ningxiang just for safety, and store up
         ningxiang_output_sorted = self._sort_features(ningxiang_output)
@@ -235,31 +295,40 @@ class YangZhouB:
 
         # update previous internal structures based on first set of hyperparameter choices
         # here used numbers instead of tuples as the values in parameter_choices; thus need another mapping to get map back to the features
-        self.parameter_choices['features'] = tuple(
-            [i for i in range(len(ningxiang_output_sorted))])
-        self._feature_combo_n_index_map = {i: list(ningxiang_output_sorted.keys())[
-            i] for i in range(len(ningxiang_output_sorted))}
+        self.parameter_choices["features"] = tuple(
+            [i for i in range(len(ningxiang_output_sorted))]
+        )
+        self._feature_combo_n_index_map = {
+            i: list(ningxiang_output_sorted.keys())[i]
+            for i in range(len(ningxiang_output_sorted))
+        }
 
         self.hyperparameters = list(self.parameter_choices.keys())
 
         # automatically calculate how many different values in each hyperparameter
-        self.n_items = [len(self.parameter_choices[key])
-                        for key in self.hyperparameters]
-        self.num_hyperparameters = {hyperparameter: len(
-            self.parameter_choices[hyperparameter]) for hyperparameter in self.hyperparameters}
+        self.n_items = [
+            len(self.parameter_choices[key]) for key in self.hyperparameters
+        ]
+        self.num_hyperparameters = {
+            hyperparameter: len(self.parameter_choices[hyperparameter])
+            for hyperparameter in self.hyperparameters
+        }
         self._total_combos = np.prod(self.n_items)
 
         # automatically calculate all combinations and setup checked and result arrays and tuning result dataframe
         self._get_checked_and_result_array()
         self._setup_tuning_result_df()
 
-        print("Successfully recorded tuneable feature combination choices and updated relevant internal structures")
+        print(
+            "Successfully recorded tuneable feature combination choices and updated relevant internal structures"
+        )
 
     def _sort_features(self, ningxiang_output):
-        """ Helper for sorting features based on NingXiang values (input dict output dict) """
+        """Helper for sorting features based on NingXiang values (input dict output dict)"""
 
-        ningxiang_output_list = [(key, ningxiang_output[key])
-                                 for key in ningxiang_output]
+        ningxiang_output_list = [
+            (key, ningxiang_output[key]) for key in ningxiang_output
+        ]
 
         ningxiang_output_list.sort(key=lambda x: x[1])
 
@@ -268,11 +337,11 @@ class YangZhouB:
         return ningxiang_output_sorted
 
     def _get_core(self):
-        """ Helper to calculate core """
-        self._core = [int(i/2) for i in self.n_items]
+        """Helper to calculate core"""
+        self._core = [int(i / 2) for i in self.n_items]
 
     def _get_cruise_combinations(self):
-        """ Helper to cruise combinations """
+        """Helper to cruise combinations"""
 
         self._get_cruise_indices_values()
         # first get cruise indicies, then use indicies to get combinations
@@ -281,24 +350,26 @@ class YangZhouB:
         self._n_cruise_coord = len(self._cruise_combinations)
 
     def _get_cruise_indices_values(self):
-        """ Helper to get cruise indices values of each dimension which serves as building blocks for cruise combinations """
+        """Helper to get cruise indices values of each dimension which serves as building blocks for cruise combinations"""
 
         self._cruise_indices = dict()
         for hyperparameter in self.hyperparameters:
             self._cruise_indices[hyperparameter] = self._get_cruise_indices_1d(
-                d_val=self.num_hyperparameters[hyperparameter], max_jump=5)
+                d_val=self.num_hyperparameters[hyperparameter], max_jump=5
+            )
 
         self._cruise_indices_values = list(self._cruise_indices.values())
 
     def _get_cruise_indices_1d(self, d_val, max_jump=5):
-        """ Helper that returns the appropriate cruise indices based on the number of values in dimension. Second argument controls maximum split size, defaulted to 5 """
+        """Helper that returns the appropriate cruise indices based on the number of values in dimension. Second argument controls maximum split size, defaulted to 5"""
 
-        assert type(d_val) is int and type(
-            max_jump) is int, "Error: type of input(s) is not int"
+        assert (
+            type(d_val) is int and type(max_jump) is int
+        ), "Error: type of input(s) is not int"
         assert max_jump >= 1, "Error: max_jump must be >= 1"
 
         gap = d_val - 1
-        split = ((gap-1)//max_jump)
+        split = (gap - 1) // max_jump
 
         jump = self._find_gaps(split, gap)
 
@@ -307,10 +378,10 @@ class YangZhouB:
         return cruise_indices_1d
 
     def _find_gaps(self, split, gap):
-        """ Helper that finds the size of jumps between each element of the final cruise indices, as evenly split as possible with jump size <= 5 """
+        """Helper that finds the size of jumps between each element of the final cruise indices, as evenly split as possible with jump size <= 5"""
 
         if split > 0:
-            jump = [gap//(split+1) for i in range(split+1)]
+            jump = [gap // (split + 1) for i in range(split + 1)]
             diff = gap - sum(jump)
             if diff:
                 for i in range(diff):
@@ -321,11 +392,11 @@ class YangZhouB:
         return jump
 
     def _find_cruise_indices_1d(self, jump):
-        """ Helper that finds the actual cruise_indices based on gaps """
+        """Helper that finds the actual cruise_indices based on gaps"""
 
         cruise_indices_1d = [0]
         for i in range(len(jump)):
-            cruise_indices_1d.append(sum(jump[:i+1]))
+            cruise_indices_1d.append(sum(jump[: i + 1]))
 
         if cruise_indices_1d == [0, 0]:
             cruise_indices_1d = [0]
@@ -333,7 +404,7 @@ class YangZhouB:
         return cruise_indices_1d
 
     def _generate_cruise_combinations(self):
-        """ Helper that generates the actual cruise combinations based on cruise indicies """
+        """Helper that generates the actual cruise combinations based on cruise indicies"""
         # ALGORITHM: how to generate all combinations of any dimensions given each dimension has different values
         self._cruise_combinations = [[]]
         for i in range(len(self._cruise_indices_values)):
@@ -351,24 +422,28 @@ class YangZhouB:
                     self._cruise_combinations.append(y)
 
     def _sort_cruise_combos(self, max_combo):
-        """ sort the cruise combos based on Euclidean distance from current max"""
+        """sort the cruise combos based on Euclidean distance from current max"""
 
         edist = list(cdist([max_combo], self._cruise_combinations).flatten())
-        ordered_cruise_combos = [(self._cruise_combinations[i], edist[i])
-                                 for i in range(len(self._cruise_combinations))]
+        ordered_cruise_combos = [
+            (self._cruise_combinations[i], edist[i])
+            for i in range(len(self._cruise_combinations))
+        ]
 
         ordered_cruise_combos.sort(reverse=True, key=lambda x: x[1])
 
-        sorted_cruise_combos = [ordered_cruise_combos[i][0]
-                                for i in range(len(ordered_cruise_combos))]
+        sorted_cruise_combos = [
+            ordered_cruise_combos[i][0] for i in range(len(ordered_cruise_combos))
+        ]
 
         return sorted_cruise_combos
 
     def _get_max_surrounding_mean_sd(self):
-        """ Helper to get the surrounding mean and sd given the current maximum """
+        """Helper to get the surrounding mean and sd given the current maximum"""
 
         best_combo_surrounding_combos = self._get_surrounding_step_combos(
-            self.best_combo)
+            self.best_combo
+        )
         best_combo_surrounding_scores = [self.best_score]
         for combo in best_combo_surrounding_combos:
             best_combo_surrounding_scores.append(self.result[tuple(combo)])
@@ -378,17 +453,19 @@ class YangZhouB:
 
         return max_surrounding_mean, max_surrounding_sd
 
-    def _cruise_warning_threshold(self, max_surrounding_mean, max_surrounding_sd, max_surrounding_n):
-        """ Helper that gets the warning threshold by (mean of best_combo surrounds - halfwidth) """
+    def _cruise_warning_threshold(
+        self, max_surrounding_mean, max_surrounding_sd, max_surrounding_n
+    ):
+        """Helper that gets the warning threshold by (mean of best_combo surrounds - halfwidth)"""
 
         # use 0.95 (one sided test)
-        qt = t.ppf(0.95, max_surrounding_n-1)
-        halfwidth = max_surrounding_sd * qt * 1/np.sqrt(max_surrounding_n)
+        qt = t.ppf(0.95, max_surrounding_n - 1)
+        halfwidth = max_surrounding_sd * qt * 1 / np.sqrt(max_surrounding_n)
 
         return max_surrounding_mean - halfwidth
 
     def _CruiseSystem(self):
-        """ Helper that performs cruising """
+        """Helper that performs cruising"""
 
         # get cruise combos in sorted order (furthest away from current max)
         sorted_cruise_combos = self._sort_cruise_combos(self.best_combo)
@@ -397,7 +474,8 @@ class YangZhouB:
         max_surrounding_mean, max_surrounding_sd = self._get_max_surrounding_mean_sd()
 
         warning_threshold = self._cruise_warning_threshold(
-            max_surrounding_mean, max_surrounding_sd, len(self._surrounding_vectors))
+            max_surrounding_mean, max_surrounding_sd, len(self._surrounding_vectors)
+        )
 
         # check each cruise combo
         for cruise_combo in sorted_cruise_combos:
@@ -408,7 +486,8 @@ class YangZhouB:
                 self._cruising_up_to += 1
 
                 print(
-                    f'Cruising Coordrdinate {self._cruising_up_to} of {self._n_cruise_coord}\n')
+                    f"Cruising Coordrdinate {self._cruising_up_to} of {self._n_cruise_coord}\n"
+                )
 
                 # actually been cruised
                 self.been_cruised[tuple(cruise_combo)] = 2
@@ -426,12 +505,12 @@ class YangZhouB:
         return
 
     def _get_core(self):
-        """ Helper to calculate core """
+        """Helper to calculate core"""
 
-        self._core = [int(i/2) for i in self.n_items]
+        self._core = [int(i / 2) for i in self.n_items]
 
     def _new_combos(self, core, vector):
-        """ Helper that gets particular COORDINATE using a move in direction of VECTOR from particular CORE """
+        """Helper that gets particular COORDINATE using a move in direction of VECTOR from particular CORE"""
 
         assert len(core) == len(vector)
 
@@ -446,21 +525,20 @@ class YangZhouB:
         return new_combo
 
     def _xlnx(self, x):
-        """ Helper that returns x*ln(x), rounding up to next int """
-        y = int(x*np.log(x))+1
+        """Helper that returns x*ln(x), rounding up to next int"""
+        y = int(x * np.log(x)) + 1
 
         return y
 
     def _find_new_core(self, surrounding_combos, core):
-        """ Helper that finds new cores - only those candidates with difference between core and treatment < 0.005 """
+        """Helper that finds new cores - only those candidates with difference between core and treatment < 0.005"""
 
         new_cores = []
         tmp_new_cores = list()
 
         for i in range(len(surrounding_combos)):
 
-            diff = self.result[tuple(core)] - \
-                self.result[tuple(surrounding_combos[i])]
+            diff = self.result[tuple(core)] - self.result[tuple(surrounding_combos[i])]
 
             if diff <= 0.005:
                 if self.checked_core[tuple(surrounding_combos[i])] == 0:
@@ -482,7 +560,7 @@ class YangZhouB:
         return new_cores
 
     def _get_surrounding_step_vectors(self, core):
-        """ find all horizontal steps """
+        """find all horizontal steps"""
 
         all_steps = list()
 
@@ -496,7 +574,7 @@ class YangZhouB:
         return all_steps
 
     def _get_surrounding_step_combos(self, core):
-        """ find all vectors that are one horizontal steps away from core """
+        """find all vectors that are one horizontal steps away from core"""
 
         surrounding_combos = list()
         for step in self._surrounding_vectors:
@@ -505,7 +583,7 @@ class YangZhouB:
             candidate_surrounding_combo = list()
 
             for i in range(len(core)):
-                new_index = core[i]+step[i]
+                new_index = core[i] + step[i]
                 if new_index < 0 or new_index >= self.n_items[i]:
                     add = 0
                     break
@@ -518,7 +596,7 @@ class YangZhouB:
         return surrounding_combos
 
     def _get_new_cores(self, core):
-        """ Helper that gets new cores given old cores """
+        """Helper that gets new cores given old cores"""
 
         # if (should be rare) case where core has been a core before, then skip. For prevention of infinite loops
         # 2 means actual checked core, 1 means appended to checked core list but not checked
@@ -544,14 +622,14 @@ class YangZhouB:
         return new_cores
 
     def _GuidanceSystem(self, core):
-        """ Helper that performs guidance search """
+        """Helper that performs guidance search"""
 
         if self._restarts == 0:
             print("Guidance: initial round \n")
         else:
-            print("Guidance: round", self._restarts, '\n')
+            print("Guidance: round", self._restarts, "\n")
 
-        print('\tround', self._restarts, 'iteration: ', 0, '\n')
+        print("\tround", self._restarts, "iteration: ", 0, "\n")
 
         # first get a surrounding 3^d tuned
         new_cores = self._get_new_cores(core)
@@ -560,7 +638,7 @@ class YangZhouB:
 
         round = 1
         while new_cores:  # while new cores are being added
-            print('\tround', self._restarts, "iteration: ", round, "\n")
+            print("\tround", self._restarts, "iteration: ", round, "\n")
             round += 1
 
             old_new_cores = copy.deepcopy(new_cores)
@@ -588,8 +666,7 @@ class YangZhouB:
 
             self.been_best[tuple(self.best_combo)] = 1
 
-            surrounding_combos = self._get_surrounding_step_combos(
-                self.best_combo)
+            surrounding_combos = self._get_surrounding_step_combos(self.best_combo)
             for combo in surrounding_combos:
 
                 if self.checked[tuple(combo)] == 0:
@@ -599,23 +676,37 @@ class YangZhouB:
 
         # print information of this round
 
-        print('% Combos Checked Thus Far:', int(sum(self.checked.reshape((np.prod(self.n_items))))),
-              'out of', np.prod(self.n_items), 'which is', f'{np.mean(self.checked).round(8)*100}%')
+        print(
+            "% Combos Checked Thus Far:",
+            int(sum(self.checked.reshape((np.prod(self.n_items))))),
+            "out of",
+            np.prod(self.n_items),
+            "which is",
+            f"{np.mean(self.checked).round(8)*100}%",
+        )
 
     def tune(self, key_stats_only=False):
-        """ Begin tuning """
+        """Begin tuning"""
 
-        if self.train_x is None or self.train_y is None or self.val_x is None or self.val_y is None or self.test_x is None or self.test_y is None:
+        if (
+            self.train_x is None
+            or self.train_y is None
+            or self.val_x is None
+            or self.val_y is None
+            or self.test_x is None
+            or self.test_y is None
+        ):
             raise AttributeError(
-                " Missing one of the datasets, please run .read_in_data() ")
+                " Missing one of the datasets, please run .read_in_data() "
+            )
 
         if self.model is None:
-            raise AttributeError(
-                " Missing model, please run .read_in_model() ")
+            raise AttributeError(" Missing model, please run .read_in_model() ")
 
         if self.tuning_result_saving_address is None:
             raise AttributeError(
-                "Missing tuning result csv saving address, please run .set_tuning_result_saving_address() first")
+                "Missing tuning result csv saving address, please run .set_tuning_result_saving_address() first"
+            )
 
         self.key_stats_only = key_stats_only
 
@@ -642,10 +733,9 @@ class YangZhouB:
                 self._check_already_trained_best_score(combo)
 
         # SECOND: from the core combo, begin guidance system
-        self._surrounding_vectors = self._get_surrounding_step_vectors(
-            self._core)
+        self._surrounding_vectors = self._get_surrounding_step_vectors(self._core)
 
-        print('\n')
+        print("\n")
         print("STAGE ONE: Begin initial Guidance system\n\n")
 
         self._restarts = 0
@@ -666,11 +756,11 @@ class YangZhouB:
         # FINALLY: Final extensive guidance search around maxes.
         print("FINAL STAGE: Begin final Guidance system\n\n")
         old_best_score = copy.deepcopy(self.best_score)
-        self._restarts = 'FINAL'
+        self._restarts = "FINAL"
 
         self._GuidanceSystem(self.best_combo)
 
-        while (self.best_score-old_best_score > 0):
+        while self.best_score - old_best_score > 0:
             old_best_score = copy.deepcopy(self.best_score)
             self._GuidanceSystem(self.best_combo)
 
@@ -681,257 +771,302 @@ class YangZhouB:
 
         metrics_dict = dd(float)
 
-        if self.clf_type == 'Regression':
+        if self.clf_type == "Regression":
 
             try:
-                metrics_dict['train_r2'] = r2_score(self.train_y, train_pred)
+                metrics_dict["train_r2"] = r2_score(self.train_y, train_pred)
             except:
                 pass
             try:
-                metrics_dict['val_r2'] = r2_score(self.val_y, val_pred)
+                metrics_dict["val_r2"] = r2_score(self.val_y, val_pred)
             except:
                 pass
             try:
-                metrics_dict['test_r2'] = r2_score(self.test_y, test_pred)
-            except:
-                pass
-
-            try:
-                metrics_dict['train_rmse'] = np.sqrt(
-                    mean_squared_error(self.train_y, train_pred))
-            except:
-                pass
-            try:
-                metrics_dict['val_rmse'] = np.sqrt(
-                    mean_squared_error(self.val_y, val_pred))
-            except:
-                pass
-            try:
-                metrics_dict['test_rmse'] = np.sqrt(
-                    mean_squared_error(self.test_y, test_pred))
-            except:
-                pass
-
-            if self.key_stats_only == True:
-                try:
-                    metrics_dict['train_mape'] = mean_absolute_percentage_error(
-                        self.train_y, train_pred)
-                except:
-                    pass
-                try:
-                    metrics_dict['val_mape'] = mean_absolute_percentage_error(
-                        self.val_y, val_pred)
-                except:
-                    pass
-                try:
-                    metrics_dict['test_mape'] = mean_absolute_percentage_error(
-                        self.test_y, test_pred)
-                except:
-                    pass
-
-            df_building_dict['Train r2'] = [
-                np.round(metrics_dict.get('train_r2', 0), 6)]
-            df_building_dict['Val r2'] = [
-                np.round(metrics_dict.get('val_r2', 0), 6)]
-            df_building_dict['Test r2'] = [
-                np.round(metrics_dict.get('test_r2', 0), 6)]
-            df_building_dict['Train rmse'] = [
-                np.round(metrics_dict.get('train_rmse', 0), 6)]
-            df_building_dict['Val rmse'] = [
-                np.round(metrics_dict.get('val_rmse', 0), 6)]
-            df_building_dict['Test rmse'] = [
-                np.round(metrics_dict.get('test_rmse', 0), 6)]
-
-            if self.key_stats_only == True:
-                df_building_dict['Train mape'] = [
-                    np.round(metrics_dict.get('train_mape', 0), 6)]
-                df_building_dict['Val mape'] = [
-                    np.round(metrics_dict.get('val_mape', 0), 6)]
-                df_building_dict['Test mape'] = [
-                    np.round(metrics_dict.get('test_mape', 0), 6)]
-
-        elif self.clf_type == 'Classification':
-
-            try:
-                metrics_dict['train_accuracy'] = accuracy_score(
-                    self.train_y, train_pred)
-            except:
-                pass
-            try:
-                metrics_dict['val_accuracy'] = accuracy_score(
-                    self.val_y, val_pred)
-            except:
-                pass
-            try:
-                metrics_dict['test_accuracy'] = accuracy_score(
-                    self.test_y, test_pred)
+                metrics_dict["test_r2"] = r2_score(self.test_y, test_pred)
             except:
                 pass
 
             try:
-                metrics_dict['train_f1'] = f1_score(
-                    self.train_y, train_pred, average='weighted')
+                metrics_dict["train_rmse"] = np.sqrt(
+                    mean_squared_error(self.train_y, train_pred)
+                )
             except:
                 pass
             try:
-                metrics_dict['val_f1'] = f1_score(
-                    self.val_y, val_pred, average='weighted')
+                metrics_dict["val_rmse"] = np.sqrt(
+                    mean_squared_error(self.val_y, val_pred)
+                )
             except:
                 pass
             try:
-                metrics_dict['test_f1'] = f1_score(
-                    self.test_y, test_pred, average='weighted')
-            except:
-                pass
-
-            try:
-                metrics_dict['train_precision'] = precision_score(
-                    self.train_y, train_pred, average='weighted')
-            except:
-                pass
-            try:
-                metrics_dict['val_precision'] = precision_score(
-                    self.val_y, val_pred, average='weighted')
-            except:
-                pass
-            try:
-                metrics_dict['test_precision'] = precision_score(
-                    self.test_y, test_pred, average='weighted')
-            except:
-                pass
-
-            try:
-                metrics_dict['train_recall'] = recall_score(
-                    self.train_y, train_pred, average='weighted')
-            except:
-                pass
-            try:
-                metrics_dict['val_recall'] = recall_score(
-                    self.val_y, val_pred, average='weighted')
-            except:
-                pass
-            try:
-                metrics_dict['test_recall'] = recall_score(
-                    self.test_y, test_pred, average='weighted')
+                metrics_dict["test_rmse"] = np.sqrt(
+                    mean_squared_error(self.test_y, test_pred)
+                )
             except:
                 pass
 
             if self.key_stats_only == True:
                 try:
-                    metrics_dict['train_bal_accu'] = balanced_accuracy_score(
-                        self.train_y, train_pred)
+                    metrics_dict["train_mape"] = mean_absolute_percentage_error(
+                        self.train_y, train_pred
+                    )
                 except:
                     pass
                 try:
-                    metrics_dict['val_bal_accu'] = balanced_accuracy_score(
-                        self.val_y, val_pred)
+                    metrics_dict["val_mape"] = mean_absolute_percentage_error(
+                        self.val_y, val_pred
+                    )
                 except:
                     pass
                 try:
-                    metrics_dict['test_bal_accu'] = balanced_accuracy_score(
-                        self.test_y, test_pred)
+                    metrics_dict["test_mape"] = mean_absolute_percentage_error(
+                        self.test_y, test_pred
+                    )
                 except:
                     pass
 
-                try:
-                    metrics_dict['train_ap'] = average_precision_score(
-                        self.train_y, train_pred)
-                except:
-                    pass
-                try:
-                    metrics_dict['val_ap'] = average_precision_score(
-                        self.val_y, val_pred)
-                except:
-                    pass
-                try:
-                    metrics_dict['test_ap'] = average_precision_score(
-                        self.test_y, test_pred)
-                except:
-                    pass
-
-                try:
-                    metrics_dict['train_auc'] = roc_auc_score(
-                        self.train_y, train_pred)
-                except:
-                    pass
-                try:
-                    metrics_dict['val_auc'] = roc_auc_score(
-                        self.val_y, val_pred)
-                except:
-                    pass
-                try:
-                    metrics_dict['test_auc'] = roc_auc_score(
-                        self.test_y, test_pred)
-                except:
-                    pass
-
-            df_building_dict['Train accuracy'] = [
-                np.round(metrics_dict.get('train_accuracy', 0), 6)]
-            df_building_dict['Val accuracy'] = [
-                np.round(metrics_dict.get('val_accuracy', 0), 6)]
-            df_building_dict['Test accuracy'] = [
-                np.round(metrics_dict.get('val_accuracy', 0), 6)]
-            df_building_dict['Train f1'] = [
-                np.round(metrics_dict.get('train_f1', 0), 6)]
-            df_building_dict['Val f1'] = [
-                np.round(metrics_dict.get('val_f1', 0), 6)]
-            df_building_dict['Test f1'] = [
-                np.round(metrics_dict.get('test_f1', 0), 6)]
-            df_building_dict['Train precision'] = [
-                np.round(metrics_dict.get('train_precision', 0), 6)]
-            df_building_dict['Val precision'] = [
-                np.round(metrics_dict.get('val_precision', 0), 6)]
-            df_building_dict['Test precision'] = [
-                np.round(metrics_dict.get('test_precision', 0), 6)]
-            df_building_dict['Train recall'] = [
-                np.round(metrics_dict.get('train_recall', 0), 6)]
-            df_building_dict['Val recall'] = [
-                np.round(metrics_dict.get('val_recall', 0), 6)]
-            df_building_dict['Test recall'] = [
-                np.round(metrics_dict.get('test_recall', 0), 6)]
+            df_building_dict["Train r2"] = [
+                np.round(metrics_dict.get("train_r2", 0), 6)
+            ]
+            df_building_dict["Val r2"] = [np.round(metrics_dict.get("val_r2", 0), 6)]
+            df_building_dict["Test r2"] = [np.round(metrics_dict.get("test_r2", 0), 6)]
+            df_building_dict["Train rmse"] = [
+                np.round(metrics_dict.get("train_rmse", 0), 6)
+            ]
+            df_building_dict["Val rmse"] = [
+                np.round(metrics_dict.get("val_rmse", 0), 6)
+            ]
+            df_building_dict["Test rmse"] = [
+                np.round(metrics_dict.get("test_rmse", 0), 6)
+            ]
 
             if self.key_stats_only == True:
-                df_building_dict['Train balanced_accuracy'] = [
-                    np.round(metrics_dict.get('train_bal_accu', 0), 6)]
-                df_building_dict['Val balanced_accuracy'] = [
-                    np.round(metrics_dict.get('val_bal_accu', 0), 6)]
-                df_building_dict['Test balanced_accuracy'] = [
-                    np.round(metrics_dict.get('test_bal_accu', 0), 6)]
-                df_building_dict['Train AP'] = [
-                    np.round(metrics_dict.get('train_ap', 0), 6)]
-                df_building_dict['Val AP'] = [
-                    np.round(metrics_dict.get('val_ap', 0), 6)]
-                df_building_dict['Test AP'] = [
-                    np.round(metrics_dict.get('test_ap', 0), 6)]
-                df_building_dict['Train AUC'] = [
-                    np.round(metrics_dict.get('train_auc', 0), 6)]
-                df_building_dict['Val AUC'] = [
-                    np.round(metrics_dict.get('val_auc', 0), 6)]
-                df_building_dict['Test AUC'] = [
-                    np.round(metrics_dict.get('test_auc', 0), 6)]
+                df_building_dict["Train mape"] = [
+                    np.round(metrics_dict.get("train_mape", 0), 6)
+                ]
+                df_building_dict["Val mape"] = [
+                    np.round(metrics_dict.get("val_mape", 0), 6)
+                ]
+                df_building_dict["Test mape"] = [
+                    np.round(metrics_dict.get("test_mape", 0), 6)
+                ]
 
-        return df_building_dict, metrics_dict[f'val_{self.optimised_metric}'], metrics_dict[f'test_{self.optimised_metric}']
+        elif self.clf_type == "Classification":
+
+            try:
+                metrics_dict["train_accuracy"] = accuracy_score(
+                    self.train_y, train_pred
+                )
+            except:
+                pass
+            try:
+                metrics_dict["val_accuracy"] = accuracy_score(self.val_y, val_pred)
+            except:
+                pass
+            try:
+                metrics_dict["test_accuracy"] = accuracy_score(self.test_y, test_pred)
+            except:
+                pass
+
+            try:
+                metrics_dict["train_f1"] = f1_score(
+                    self.train_y, train_pred, average="weighted"
+                )
+            except:
+                pass
+            try:
+                metrics_dict["val_f1"] = f1_score(
+                    self.val_y, val_pred, average="weighted"
+                )
+            except:
+                pass
+            try:
+                metrics_dict["test_f1"] = f1_score(
+                    self.test_y, test_pred, average="weighted"
+                )
+            except:
+                pass
+
+            try:
+                metrics_dict["train_precision"] = precision_score(
+                    self.train_y, train_pred, average="weighted"
+                )
+            except:
+                pass
+            try:
+                metrics_dict["val_precision"] = precision_score(
+                    self.val_y, val_pred, average="weighted"
+                )
+            except:
+                pass
+            try:
+                metrics_dict["test_precision"] = precision_score(
+                    self.test_y, test_pred, average="weighted"
+                )
+            except:
+                pass
+
+            try:
+                metrics_dict["train_recall"] = recall_score(
+                    self.train_y, train_pred, average="weighted"
+                )
+            except:
+                pass
+            try:
+                metrics_dict["val_recall"] = recall_score(
+                    self.val_y, val_pred, average="weighted"
+                )
+            except:
+                pass
+            try:
+                metrics_dict["test_recall"] = recall_score(
+                    self.test_y, test_pred, average="weighted"
+                )
+            except:
+                pass
+
+            if self.key_stats_only == True:
+                try:
+                    metrics_dict["train_bal_accu"] = balanced_accuracy_score(
+                        self.train_y, train_pred
+                    )
+                except:
+                    pass
+                try:
+                    metrics_dict["val_bal_accu"] = balanced_accuracy_score(
+                        self.val_y, val_pred
+                    )
+                except:
+                    pass
+                try:
+                    metrics_dict["test_bal_accu"] = balanced_accuracy_score(
+                        self.test_y, test_pred
+                    )
+                except:
+                    pass
+
+                try:
+                    metrics_dict["train_ap"] = average_precision_score(
+                        self.train_y, train_pred
+                    )
+                except:
+                    pass
+                try:
+                    metrics_dict["val_ap"] = average_precision_score(
+                        self.val_y, val_pred
+                    )
+                except:
+                    pass
+                try:
+                    metrics_dict["test_ap"] = average_precision_score(
+                        self.test_y, test_pred
+                    )
+                except:
+                    pass
+
+                try:
+                    metrics_dict["train_auc"] = roc_auc_score(self.train_y, train_pred)
+                except:
+                    pass
+                try:
+                    metrics_dict["val_auc"] = roc_auc_score(self.val_y, val_pred)
+                except:
+                    pass
+                try:
+                    metrics_dict["test_auc"] = roc_auc_score(self.test_y, test_pred)
+                except:
+                    pass
+
+            df_building_dict["Train accuracy"] = [
+                np.round(metrics_dict.get("train_accuracy", 0), 6)
+            ]
+            df_building_dict["Val accuracy"] = [
+                np.round(metrics_dict.get("val_accuracy", 0), 6)
+            ]
+            df_building_dict["Test accuracy"] = [
+                np.round(metrics_dict.get("val_accuracy", 0), 6)
+            ]
+            df_building_dict["Train f1"] = [
+                np.round(metrics_dict.get("train_f1", 0), 6)
+            ]
+            df_building_dict["Val f1"] = [np.round(metrics_dict.get("val_f1", 0), 6)]
+            df_building_dict["Test f1"] = [np.round(metrics_dict.get("test_f1", 0), 6)]
+            df_building_dict["Train precision"] = [
+                np.round(metrics_dict.get("train_precision", 0), 6)
+            ]
+            df_building_dict["Val precision"] = [
+                np.round(metrics_dict.get("val_precision", 0), 6)
+            ]
+            df_building_dict["Test precision"] = [
+                np.round(metrics_dict.get("test_precision", 0), 6)
+            ]
+            df_building_dict["Train recall"] = [
+                np.round(metrics_dict.get("train_recall", 0), 6)
+            ]
+            df_building_dict["Val recall"] = [
+                np.round(metrics_dict.get("val_recall", 0), 6)
+            ]
+            df_building_dict["Test recall"] = [
+                np.round(metrics_dict.get("test_recall", 0), 6)
+            ]
+
+            if self.key_stats_only == True:
+                df_building_dict["Train balanced_accuracy"] = [
+                    np.round(metrics_dict.get("train_bal_accu", 0), 6)
+                ]
+                df_building_dict["Val balanced_accuracy"] = [
+                    np.round(metrics_dict.get("val_bal_accu", 0), 6)
+                ]
+                df_building_dict["Test balanced_accuracy"] = [
+                    np.round(metrics_dict.get("test_bal_accu", 0), 6)
+                ]
+                df_building_dict["Train AP"] = [
+                    np.round(metrics_dict.get("train_ap", 0), 6)
+                ]
+                df_building_dict["Val AP"] = [
+                    np.round(metrics_dict.get("val_ap", 0), 6)
+                ]
+                df_building_dict["Test AP"] = [
+                    np.round(metrics_dict.get("test_ap", 0), 6)
+                ]
+                df_building_dict["Train AUC"] = [
+                    np.round(metrics_dict.get("train_auc", 0), 6)
+                ]
+                df_building_dict["Val AUC"] = [
+                    np.round(metrics_dict.get("val_auc", 0), 6)
+                ]
+                df_building_dict["Test AUC"] = [
+                    np.round(metrics_dict.get("test_auc", 0), 6)
+                ]
+
+        return (
+            df_building_dict,
+            metrics_dict[f"val_{self.optimised_metric}"],
+            metrics_dict[f"test_{self.optimised_metric}"],
+        )
 
     def _train_and_test_combo(self, combo):
-        """ Helper to train and test each combination as part of tune() """
+        """Helper to train and test each combination as part of tune()"""
 
         combo = tuple(combo)
 
-        params = {self.hyperparameters[i]: self.parameter_choices[self.hyperparameters[i]]
-                  [combo[i]] for i in range(len(self.hyperparameters))}
+        params = {
+            self.hyperparameters[i]: self.parameter_choices[self.hyperparameters[i]][
+                combo[i]
+            ]
+            for i in range(len(self.hyperparameters))
+        }
 
         if self._tune_features == True:
-            del params['features']
-            tmp_train_x = self.train_x[list(
-                self._feature_combo_n_index_map[combo[-1]])]
-            tmp_val_x = self.val_x[list(
-                self._feature_combo_n_index_map[combo[-1]])]
-            tmp_test_x = self.test_x[list(
-                self._feature_combo_n_index_map[combo[-1]])]
+            del params["features"]
+            tmp_train_x = self.train_x[list(self._feature_combo_n_index_map[combo[-1]])]
+            tmp_val_x = self.val_x[list(self._feature_combo_n_index_map[combo[-1]])]
+            tmp_test_x = self.test_x[list(self._feature_combo_n_index_map[combo[-1]])]
 
             if self.pytorch_model:
-                params['input_dim'] = len(
-                    list(self._feature_combo_n_index_map[combo[-1]]))
+                params["input_dim"] = len(
+                    list(self._feature_combo_n_index_map[combo[-1]])
+                )
 
             # add non tuneable parameters
             for nthp in self.non_tuneable_parameter_choices:
@@ -940,12 +1075,14 @@ class YangZhouB:
             # initialise object
             clf = self.model(**params)
 
-            params['features'] = [
-                list(self._feature_combo_n_index_map[combo[-1]])]
-            params['n_columns'] = len(
-                list(self._feature_combo_n_index_map[combo[-1]]))
-            params['n_features'] = combo[-1]
-            params['feature combo ningxiang score'] = self.feature_n_ningxiang_score_dict[self._feature_combo_n_index_map[combo[-1]]]
+            params["features"] = [list(self._feature_combo_n_index_map[combo[-1]])]
+            params["n_columns"] = len(list(self._feature_combo_n_index_map[combo[-1]]))
+            params["n_features"] = combo[-1]
+            params["feature combo ningxiang score"] = (
+                self.feature_n_ningxiang_score_dict[
+                    self._feature_combo_n_index_map[combo[-1]]
+                ]
+            )
 
         else:
             tmp_train_x = self.train_x
@@ -953,7 +1090,7 @@ class YangZhouB:
             tmp_test_x = self.test_x
 
             if self.pytorch_model:
-                params['input_dim'] = len(list(self.train_x.columns))
+                params["input_dim"] = len(list(self.train_x.columns))
 
             # add non tuneable parameters
             for nthp in self.non_tuneable_parameter_choices:
@@ -973,17 +1110,18 @@ class YangZhouB:
         test_pred = clf.predict(tmp_test_x)
 
         # get scores and time used
-        time_used = end-start
+        time_used = end - start
 
         # build output dictionary and save result
         df_building_dict = params
 
         # get evaluation statistics
         df_building_dict, val_score, test_score = self._eval_combo(
-            df_building_dict, train_pred, val_pred, test_pred)
+            df_building_dict, train_pred, val_pred, test_pred
+        )
 
-        df_building_dict['Time'] = [np.round(time_used, 2)]
-        df_building_dict['Precedence'] = [self._up_to]
+        df_building_dict["Time"] = [np.round(time_used, 2)]
+        df_building_dict["Precedence"] = [self._up_to]
 
         tmp = pd.DataFrame(df_building_dict)
 
@@ -1006,11 +1144,13 @@ class YangZhouB:
 
         self._up_to += 1
 
-        print(f'''Trained and Tested combination {self._up_to} of {self._total_combos}: {combo}, taking {np.round(time_used,2)} seconds to get val score of {np.round(val_score,4)}
-        Current best combo: {self.best_combo} with val score {np.round(self.best_score, 4)}''')
+        print(
+            f"""Trained and Tested combination {self._up_to} of {self._total_combos}: {combo}, taking {np.round(time_used,2)} seconds to get val score of {np.round(val_score,4)}
+        Current best combo: {self.best_combo} with val score {np.round(self.best_score, 4)}"""
+        )
 
     def _check_already_trained_best_score(self, combo):
-        """ Helper for checking whether an already trained combo is best score """
+        """Helper for checking whether an already trained combo is best score"""
 
         combo = tuple(combo)
 
@@ -1018,62 +1158,97 @@ class YangZhouB:
         if self.result[combo] > self.best_score:
             self.best_score = self.result[combo]
             self.best_clf = None
-            print(
-                f"As new Best Combo {combo} was read in, best_clf is set to None")
+            print(f"As new Best Combo {combo} was read in, best_clf is set to None")
             self.best_combo = combo
 
-        print(f'''Already Trained and Tested combination {combo}, which had val score of {np.round(self.result[combo],4)}
+        print(
+            f"""Already Trained and Tested combination {combo}, which had val score of {np.round(self.result[combo],4)}
         Current best combo: {self.best_combo} with val score {np.round(self.best_score, 4)}. 
-        Has trained {self._up_to} of {self._total_combos} combinations so far''')
+        Has trained {self._up_to} of {self._total_combos} combinations so far"""
+        )
 
     def _save_tuning_result(self):
-        """ Helper to export tuning result csv """
+        """Helper to export tuning result csv"""
 
-        tuning_result_saving_address_split = self.tuning_result_saving_address.split('.csv')[
-            0]
+        tuning_result_saving_address_split = self.tuning_result_saving_address.split(
+            ".csv"
+        )[0]
 
         self.tuning_result.to_csv(
-            f'{tuning_result_saving_address_split}.csv', index=False)
+            f"{tuning_result_saving_address_split}.csv", index=False
+        )
 
     def view_best_combo_and_score(self):
-        """ View best combination and its validation score """
+        """View best combination and its validation score"""
 
-        print('Max Val Score: \n', self.best_score)
+        print("Max Val Score: \n", self.best_score)
 
-        max_val_id = self.tuning_result[f'Val {self.optimised_metric}'].idxmax(
+        max_val_id = self.tuning_result[f"Val {self.optimised_metric}"].idxmax()
+        print(
+            "Best Combo Test Score: \n",
+            self.tuning_result.iloc[max_val_id][f"Test {self.optimised_metric}"],
         )
-        print('Best Combo Test Score: \n',
-              self.tuning_result.iloc[max_val_id][f'Test {self.optimised_metric}'])
-        print('Best Combo Train Score: \n',
-              self.tuning_result.iloc[max_val_id][f'Train {self.optimised_metric}'])
+        print(
+            "Best Combo Train Score: \n",
+            self.tuning_result.iloc[max_val_id][f"Train {self.optimised_metric}"],
+        )
 
-        print('Max Combo Index: \n', self.best_combo, 'out of',
-              self.n_items, '(note best combo is 0-indexed)')
+        print(
+            "Max Combo Index: \n",
+            self.best_combo,
+            "out of",
+            self.n_items,
+            "(note best combo is 0-indexed)",
+        )
 
-        final_combo = {self.hyperparameters[i]: self.parameter_choices[self.hyperparameters[i]]
-                       [self.best_combo[i]] for i in range(len(self.hyperparameters))}
-        print('Max Combo Hyperparamer Combination: \n', final_combo)
+        final_combo = {
+            self.hyperparameters[i]: self.parameter_choices[self.hyperparameters[i]][
+                self.best_combo[i]
+            ]
+            for i in range(len(self.hyperparameters))
+        }
+        print("Max Combo Hyperparamer Combination: \n", final_combo)
 
         if self._tune_features:
-            print('Max Combo Features: \n',
-                  self._feature_combo_n_index_map[self.best_combo[-1]])
+            print(
+                "Max Combo Features: \n",
+                self._feature_combo_n_index_map[self.best_combo[-1]],
+            )
 
-        print('% Combos Checked:', int(sum(self.checked.reshape((np.prod(self.n_items))))),
-              'out of', np.prod(self.n_items), 'which is', f'{np.mean(self.checked).round(8)*100}%')
+        print(
+            "% Combos Checked:",
+            int(sum(self.checked.reshape((np.prod(self.n_items))))),
+            "out of",
+            np.prod(self.n_items),
+            "which is",
+            f"{np.mean(self.checked).round(8)*100}%",
+        )
 
     def read_in_tuning_result_df(self, address):
-        """ Read in tuning result csv and read data into checked and result arrays """
+        """Read in tuning result csv and read data into checked and result arrays"""
 
-        BOOL_MAP = {'1': True, '0': False, '1.0': True, '0.0': False, True: True,
-                    False: False, 'True': True, 'False': False, 1: True, 0: False, 1.0: True, 0.0: False}
+        BOOL_MAP = {
+            "1": True,
+            "0": False,
+            "1.0": True,
+            "0.0": False,
+            True: True,
+            False: False,
+            "True": True,
+            "False": False,
+            1: True,
+            0: False,
+            1.0: True,
+            0.0: False,
+        }
 
         if self.parameter_choices is None:
             raise AttributeError(
-                "Missing parameter_choices to build _parameter_value_map_index, please run set_hyperparameters() first")
+                "Missing parameter_choices to build _parameter_value_map_index, please run set_hyperparameters() first"
+            )
 
         if self.clf_type is None:
-            raise AttributeError(
-                'Missing clf_type. Please run .read_in_model() first.')
+            raise AttributeError("Missing clf_type. Please run .read_in_model() first.")
 
         self.tuning_result = pd.read_csv(address)
 
@@ -1088,26 +1263,37 @@ class YangZhouB:
 
                 combo = list()
                 for hyperparam in self.hyperparameters:
-                    if hyperparam == 'features':
+                    if hyperparam == "features":
 
                         # reverse two dicts
                         index_n_feature_combo_map = {
-                            self._feature_combo_n_index_map[key]: key for key in self._feature_combo_n_index_map}
+                            self._feature_combo_n_index_map[key]: key
+                            for key in self._feature_combo_n_index_map
+                        }
                         # special input
-                        combo.append(index_n_feature_combo_map[tuple(
-                            self._str_to_list(row[1]['features']))])
+                        combo.append(
+                            index_n_feature_combo_map[
+                                tuple(self._str_to_list(row[1]["features"]))
+                            ]
+                        )
 
                     else:
                         if type(self.parameter_choices[hyperparam][0]) is bool:
                             combo.append(
-                                self._parameter_value_map_index[hyperparam][BOOL_MAP[row[1][hyperparam]]])
+                                self._parameter_value_map_index[hyperparam][
+                                    BOOL_MAP[row[1][hyperparam]]
+                                ]
+                            )
                         else:
                             combo.append(
-                                self._parameter_value_map_index[hyperparam][row[1][hyperparam]])
+                                self._parameter_value_map_index[hyperparam][
+                                    row[1][hyperparam]
+                                ]
+                            )
 
                 combo = tuple(combo)
 
-                self.result[combo] = row[1][f'Val {self.optimised_metric}']
+                self.result[combo] = row[1][f"Val {self.optimised_metric}"]
 
                 self._up_to += 1
 
@@ -1115,22 +1301,23 @@ class YangZhouB:
 
             except Exception as e:
                 print(f"Error message: {str(e)}")
-                print('Error Importing this Row:', row)
+                print("Error Importing this Row:", row)
 
         print(
-            f"Successfully read in tuning result of {len(self.tuning_result)} rows, for {sum(self.checked.reshape((np.prod(self.n_items))))} combos")
+            f"Successfully read in tuning result of {len(self.tuning_result)} rows, for {sum(self.checked.reshape((np.prod(self.n_items))))} combos"
+        )
 
     def _str_to_list(self, string):
-        """ Helper to convert string to list"""
+        """Helper to convert string to list"""
 
         out = list()
-        for feature in string.split(', '):
-            out.append(feature.strip('[').strip(']').strip("'"))
+        for feature in string.split(", "):
+            out.append(feature.strip("[").strip("]").strip("'"))
 
         return out
 
     def _create_parameter_value_map_index(self):
-        """ Helper to create parameter-value index map """
+        """Helper to create parameter-value index map"""
 
         self._parameter_value_map_index = dict()
         for key in self.parameter_choices.keys():
@@ -1140,22 +1327,23 @@ class YangZhouB:
             self._parameter_value_map_index[key] = tmp
 
     def set_tuning_result_saving_address(self, address):
-        """ Read in where to save tuning object """
+        """Read in where to save tuning object"""
 
         self.tuning_result_saving_address = address
-        print('Successfully set tuning output address')
+        print("Successfully set tuning output address")
 
     def set_best_model_saving_address(self, address):
-        """ Read in where to save best model  """
+        """Read in where to save best model"""
 
         self.best_model_saving_address = address
-        print('Successfully set best model output address')
+        print("Successfully set best model output address")
 
     def _save_best_model(self):
-        """ Helper to save best model as a pickle """
+        """Helper to save best model as a pickle"""
 
-        best_model_saving_address_split = self.best_model_saving_address.split('.pickle')[
-            0]
+        best_model_saving_address_split = self.best_model_saving_address.split(
+            ".pickle"
+        )[0]
 
-        with open(f'{best_model_saving_address_split}.pickle', 'wb') as f:
+        with open(f"{best_model_saving_address_split}.pickle", "wb") as f:
             pickle.dump(self.best_clf, f)

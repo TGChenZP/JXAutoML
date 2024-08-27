@@ -38,7 +38,7 @@ class JiaoChengB:
         self.tuning_result_saving_address = None
         self._up_to = 0
         self._tune_features = False
-        self._seed = 19210216
+        self._seed = 42
         self.best_score = -np.inf
         self.best_combo = None
         self.best_clf = None
