@@ -40,16 +40,25 @@ def smoke_test():
         raise e
 
 
-def test_NingXiang(X, y, mode):
+def test_NingXiang(X, y, mode, feature_importance_model):
     from JXAutoML.NingXiang import NingXiang
 
     feature_selector = NingXiang()
     feature_selector.read_in_train_data(X, y)
     feature_selector.set_model_type(mode)
 
-    feature_order_dict = feature_selector.get_rf_based_feature_combinations(n_jobs=-1)
-
-    feature_selector.show_rf_stats()
+    if feature_importance_model == "RF":
+        feature_order_dict = feature_selector.get_rf_based_feature_combinations(
+            n_jobs=-1
+        )
+        feature_selector.show_rf_stats()
+    elif feature_importance_model == "XGB":
+        feature_order_dict = feature_selector.get_xgb_based_feature_combinations(
+            n_jobs=-1
+        )
+        feature_selector.show_rf_stats()
+    else:
+        feature_order_dict = feature_selector.get_lr_based_feature_combinations()
 
     return feature_order_dict
 
@@ -258,16 +267,31 @@ def local_test():
     smoke_test()
 
     print("===Begin NingXiang Test===\n")
-    print("===Begin NingXiang Regression Test===")
+    print("===Begin NingXiang XGB Regression Test===")
     reg_feature_importance = test_NingXiang(
-        X_class_2_df_train, y_class_2_series_train, "Regression"
+        X_class_2_df_train, y_class_2_series_train, "Regression", "XGB"
     )
-    print("===Test NingXiang Regression Successful===")
-    print("===Begin NingXiang Classification Test===")
+    print("===Test NingXiang XGB Regression Successful===")
+    print("===Begin NingXiang XGB Classification Test===")
     class_2_feature_importance = test_NingXiang(
-        X_class_2_df_val, y_class_2_series_val, "Classification"
+        X_class_2_df_val, y_class_2_series_val, "Classification", "XGB"
     )
-    print("===Test NingXiang Classification Successful===\n")
+    print("===Test NingXiang XGB Classification Successful===\n")
+    print("===Begin NingXiang LR Regression Test===")
+    reg_feature_importance = test_NingXiang(
+        X_class_2_df_train, y_class_2_series_train, "Regression", "LR"
+    )
+    print("===Test NingXiang LR Regression Successful===")
+    print("===Begin NingXiang RF Regression Test===")
+    reg_feature_importance = test_NingXiang(
+        X_class_2_df_train, y_class_2_series_train, "Regression", "RF"
+    )
+    print("===Test NingXiang RF Regression Successful===")
+    print("===Begin NingXiang RF Classification Test===")
+    class_2_feature_importance = test_NingXiang(
+        X_class_2_df_val, y_class_2_series_val, "Classification", "RF"
+    )
+    print("===Test NingXiang RF Classification Successful===\n")
     print("===Test NingXiang Successful===\n\n")
 
     print("===Begin YangZhou Test===\n")

@@ -4,6 +4,7 @@ import pickle
 import copy
 
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from xgboost import XGBClassifier, XGBRegressor
 from sklearn.linear_model import LinearRegression
 
 
@@ -18,7 +19,7 @@ class NingXiang:
 
     def _initialise_objects(self):
 
-        self._seed = 18981124
+        self._seed = 42
         self.train_x = None
         self.train_y = None
         self.val_x = None
@@ -175,6 +176,61 @@ class NingXiang:
 
         return self.ningxiang_output
 
+    def get_xgb_based_feature_combinations(self, min_features=0, gap=1, n_jobs=1):
+        """Gets NingXiang scores based on XGB feature importance"""
+
+        if self.clf_type == None:
+            raise AttributeError(
+                "clf_type not found, please run set_model_type() first"
+            )
+
+        if self.train_x is None or self.train_y is None:
+            raise AttributeError(
+                "train_x and train_y not found, please run read_in_train_data"
+            )
+
+        # Initialise the XGBoost objects
+        if self.clf_type == "Regression":
+            self.xgb = XGBRegressor(
+                n_estimators=100,
+                max_depth=12,
+                subsample=0.75,
+                random_state=self._seed,
+                gamma=0,
+                eta=0.01,
+                colsample_bytree=0.75,
+                n_jobs=n_jobs,
+            )
+        elif self.clf_type == "Classification":
+            self.xgb = XGBClassifier(
+                n_estimators=100,
+                max_depth=12,
+                subsample=0.75,
+                random_state=self._seed,
+                gamma=0,
+                eta=0.01,
+                colsample_bytree=0.75,
+                n_jobs=n_jobs,
+            )
+
+        print("Begin fitting XGBoost")
+        # fit the model and get the feature importances
+        self.xgb.fit(self.train_x, self.train_y)
+        print("Finished fitting XGBoost")
+        self.feature_importance = {
+            self.train_x.columns[i]: self.xgb.feature_importances_[i]
+            for i in range(len(self.train_x.columns))
+        }
+
+        # use handle (which can be used on its own) to generate the ningxiang output
+        self.ningxiang_output = (
+            self.get_rf_based_feature_combinations_from_feature_importance(
+                self.feature_importance, min_features, gap
+            )
+        )
+
+        return self.ningxiang_output
+
     def get_rf_based_feature_combinations_from_feature_importance(
         self, feature_importance=None, min_features=0, gap=1
     ):
@@ -238,7 +294,7 @@ class NingXiang:
         """Shows feature importance dataframe"""
 
         if self.feature_importance == None:
-            raise AttributeError("Please run .show_rf_stats()")
+            raise AttributeError("Please run .get_rf_based_feature_combinations()")
 
         print(self.feature_importance)
 
