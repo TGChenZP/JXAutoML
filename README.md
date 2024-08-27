@@ -53,8 +53,17 @@ RandomForest(n_estimators = 100, max_depth = 12, max_features = 0.75, random_sta
 ``` 
 to build the model based on training data.
 
-- Then, using this model’s feature importance, iteratively add features in reverse importance, and set NingXiang score as the sum of this set of features’ importance.
+- Then, using this model’s feature importance, iteratively add features from greatest importance to least, and set NingXiang score as the sum of this set of features’ importance.
 
+XGBoost feature importance:
+
+-First use
+```python 
+XGBoost(n_estimators=100, max_depth=12, subsample=0.75, random_state=self._seed, gamma=0, eta=0.01, colsample_bytree=0.75)
+``` 
+to build the model based on training data.
+
+- Then, using this model’s feature importance, iteratively add features from greatest importance to least, and set NingXiang score as the sum of this set of features’ importance.
 ### Note:
 - Under both use cases, the NingXiang score will be between [0, 1], however, the linear regression use case is not guaranteed to reach 1.
 - Classification models should only use Random Forest feature importance.
@@ -66,8 +75,9 @@ to build the model based on training data.
 | `min_features = 0, gap = 1`                                  | Builds a linear regression model and gets NingXiang score based on the square root of R², iteratively adding the feature that increases R² the most each time. <br> Can set the number of features in the minimum feature combo (to avoid having a combo of just 1 or 2 features, as some models can’t train with too few features). <br> Can set the gap between the number of features in neighboring combinations (useful for Natural Language Processing where there are too many features to try all). | `min_features` (`int`): The minimum number of features in a combination. <br> `gap` (`int`): The gap between the number of features in neighboring combinations.                                                                 |
 | `get_rf_based_feature_combinations(min_features = 0, gap = 1, n_jobs = 1)` | Builds a random forest model and gets NingXiang output based on feature importance. <br> Can set the number of features in the minimum feature combo. <br> Can set the gap between the number of features in neighboring combinations. | `min_features` (`int`): The minimum number of features in a combination. <br> `gap` (`int`): The gap between the number of features in neighboring combinations. <br> `n_jobs` (`int`): The number of jobs to run in parallel. |
 | `get_rf_based_feature_combinations_from_feature_importance(feature_importance = None, min_features = 0, gap = 1)` | Uses ready-made feature importance to create NingXiang output. <br> Can set the number of features in the minimum feature combo. <br> Can set the gap between the number of features in neighboring combinations. | `feature_importance` (`dict` of `str:float`): Pre-calculated feature importance. <br> `min_features` (`int`): The minimum number of features in a combination. <br> `gap` (`int`): The gap between the number of features in neighboring combinations. |
-| `show_rf_stats()`                                            | Displays the random forest feature importance dataframe and the validation score (if the validation score was inputted).                                                        | N/A                                                                                                                                                                                             |
+| `show_rf_stats()`                                            | Displays the random forest (or XGB) feature importance dataframe and the validation score (if the validation score was inputted).                                                        | N/A                                                                                                                                                                                             |
 | `export_ningxiang_output(address)`                           | Exports the current NingXiang output object as a pickle object.                                                                                                                  | `address` (`str`): The address where the pickle object will be saved. Does not need to include `.pickle`.                                                                                       |
+| `get_xgb_based_feature_combinations(self, min_features=0, gap=1, n_jobs=1)` | Builds a XGBoost model and gets NingXiang output based on feature importance. <br> Can set the number of features in the minimum feature combo. <br> Can set the gap between the number of features in neighboring combinations. | `min_features` (`int`): The minimum number of features in a combination. <br> `gap` (`int`): The gap between the number of features in neighboring combinations. <br> `n_jobs` (`int`): The number of jobs to run in parallel. |
 
 ### Attributes
 | **Attribute**              | **Type**            |
@@ -200,7 +210,7 @@ The **Guidance Algorithm** is then repeated for each of the new cores. When no n
 
 The **Cruise Algorithm** is then subsequently activated, in which each of the cruise combinations' scores will be compared to the current best scoring combination and its surrounding +/-1 neighbor block (including itself). If a cruise combination’s score is higher than the:
 
-`warning threshold = mean(best surrounding block) - qt(0.95) * (sd / √(3d))`
+`warning threshold = mean(best surrounding block) - qt(0.95) * (sd / √(3^d))`
 
 then the **Guidance Algorithm** will be restarted on that cruise combination.
 
