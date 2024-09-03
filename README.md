@@ -13,11 +13,15 @@ Author GitHub: https://github.com/TGChenZP
     - [JiaoCheng](#jiaocheng)
     - [JiaoChengB](#jiaochengb)
     - [YangZhouB](#yangzhoub)
+    - [JiaoCheng_10CV](#jiaocheng_10cv)
+    - [YangZhouB_10CV](#yangzhoub_10cv)
 4. [Usage Examples](#usage-examples)
     - [NingXiang](#ningxiang-example)
     - [JiaoCheng](#jiaocheng-example)
     - [JiaoChengB](#jiaochengb-example)
     - [YangZhouB](#yangzhou-example)
+    - [JiaoCheng_10CV](#jiaocheng_10cv-example)
+    - [YangZhouB_10CV](#yangzhou_10cv-example)
 
 # Introduction
 A package that provides smart tuning using greedy algorithms, and also enables feature selection as part of hyperparameter tuning.
@@ -269,7 +273,93 @@ same population (and thereby same distribution)
 | `regression_extra_output_columns`            | `List (pre-set)`    |
 | `classification_extra_output_columns`        | `list (pre-set)`    |
 
+## JiaoCheng_10CV
+>10Cross Validation version of [JiaoCheng](#jiaocheng)
 
+**Background**
+
+See [JiaoCheng](#jiaocheng)
+
+### Methods
+| **Method**                                        | **Description**                                                                                                                                                                  | **Parameters**                                                                                                                                                                                 |
+|--------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `JiaoCheng_10CV()`                                    | Initialisation of the JiaoCheng_10CV object.                                                                                                                                           | N/A                                                                                                                                                                                             |
+| `read_in_data(train_x_list, train_y_list, val_x_list, val_y_list)` | Reads in Train Test Split data.                                                                                                                                                  | `train_x_list` (`List[pd.DataFrame]`): Training data features (list containing one for every fold). <br> `train_y_list` (`List[pd.Series]`): Training data labels (list containing one for every fold). <br> `val_x_list` (`List[pd.DataFrame]`): Validation data features (list containing one for every fold). <br> `val_y_list` (`List[pd.Series]`): Validation data labels (list containing one for every fold).|
+| `read_in_model(model, type, optimised_metric, pytorch_model)` | Reads in the underlying model class to tune for optimal parameters; also reads in what metric to optimise for, and whether the model is a PyTorch class model.                    | `model` (Any model class): Must allow `.fit()` and `.predict()`. <br> `type` (`str`): Either "Classification" or "Regression". <br> `optimised_metric` (`str`): If `type = 'Regression'`, must be in `['r2', 'rmse', 'mape']`; if `type = 'Classification'`, must be in `['accuracy', 'f1', 'precision', 'recall', 'balanced_accuracy', 'AP', 'AUC']`. <br> `pytorch_model` (`bool`): Whether the model is a PyTorch class model. |
+| `set_hyperparameters(parameter_choices)`         | Reads in the different values of each hyperparameter to try. Function will automatically generate each combination.                                                               | `parameter_choices` (`dict` of `str:list`): Hyperparameter names (as defined in model class) and their sorted values to try out.                                                                                         |
+| `set_non_tuneable_hyperparameters(non_tuneable_hyperparameter_choice)` | Reads in values for non-tuneable hyperparameters (i.e., doesn’t need to clog up the tuning output CSV).                                                                           | `non_tuneable_hyperparameter_choices` (`dict` of `str:int`): Non-tuneable hyperparameters that do not need to appear in the tuning output CSV.                                                  |
+| `set_features(ningxiang_output)`                 | Reads in feature combinations for tuning.                                                                                                                                         | `ningxiang_output` (`dict` of `tuple:float`): Feature combinations for tuning.                                                                                                                  |
+| `set_tuning_order(order)`                        | Sets the order of tuning for hyperparameters in JiaoCheng_10CV tuning.                                                                                                                 | `order` (`list`): Order of hyperparameters for tuning.                                                                                                                                          |
+| `set_hyperparameter_default_values(default_values)` | Sets the default values for hyperparameters in JiaoCheng_10CV tuning.                                                                                                                  | `default_values` (`dict` of `str:int/float/str`): Default values for hyperparameters.                                                                                                           |
+| `set_tuning_result_saving_address(address)`      | Sets the saving address for the tuning output CSV.                                                                                                                                | `address` (`str`): Does not need to include `.csv`.                                                                                                                                             |
+| `tune(key_stats_only = False)`                   | Begins the tuning process.                                                                                                                                                        | `key_stats_only` (`bool`): If `True`, calculates only key statistics and skips non-important stats.                                                                                             |
+| `read_in_tuning_result_df(address)`              | Reads in an existing DataFrame from a `.csv` file consisting of tuning results. Automatically populates the result array and checked array if CSV columns match parameter choices. | `address` (`str`): Must include `.csv`.                                                                                                                                                         |
+| `set_tuning_best_model_saving_address(address)`  | Sets the address for exporting the best model as a pickle file.                                                                                                                   | `address` (`str`): Does not need to include `.pickle`.                                                                                                                                          |
+| `view_best_combo_and_score()`                    | Views the current best combination and its validation score.                                                                                                                      | N/A                                                                                                                                                                                             |
+
+
+### Attributes
+| **Attribute**                                | **Type**            |
+|----------------------------------------------|---------------------|
+| `str:float`                                  | `dict`              |
+| `non_tuneable_parameter_choices`             | `Dictionary`        |
+| `checked`                                    | `np.array`          |
+| `result`                                     | `np.array`          |
+| `tuning_result_saving_address`               | `str`               |
+| `best_model_saving_address`                  | `str`               |
+| `best_score`                                 | `int`               |
+| `best_combo`                                 | `list`              |
+| `best_clf`                                   | `model object`      |
+| `clf_type`                                   | `str`               |
+| `combos`                                     | `List of lists`     |
+| `n_items`                                    | `list`              |
+| `hyperparameter_tuning_order`                | `list of hyperparameters` |
+
+
+## YangZhouB_10CV
+>10Cross Validation version of [YangZhouB](#yangzhoub)
+
+**Background**
+
+See [YangZhouB](#yangzhoub)
+
+### Methods
+| **Method**                                        | **Description**                                                                                                                                                                  | **Parameters**                                                                                                                                                                                 |
+|--------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `YangZhouB_10CV()`                                    | Initialises the object.                                                                                                                                                          | N/A                                                                                                                                                                                             |
+| `read_in_data(train_x_list, train_y_list, val_x_list, val_y_list)` | Reads in Train Test Split data.                                                                                                                                                  | `train_x_list` (`List[pd.DataFrame]`): Training data features (list containing one for every fold). <br> `train_y_list` (`List[pd.Series]`): Training data labels (list containing one for every fold). <br> `val_x_list` (`List[pd.DataFrame]`): Validation data features (list containing one for every fold). <br> `val_y_list` (`List[pd.Series]`): Validation data labels (list containing one for every fold).|
+| `read_in_model(model, type, optimised_metric, pytorch_model)` | Reads in the underlying model class to tune for optimal parameters, the metric to optimise for, and whether the model is a PyTorch class model.                                  | `model` (Any model class): Must allow `.fit()` and `.predict()`. <br> `type` (`str`): Either "Classification" or "Regression". <br> `optimised_metric` (`str`): Metric to optimise, varies by `type`. <br> `pytorch_model` (`bool`): Whether the model is a PyTorch class model. |
+| `set_hyperparameters(parameter_choices)`         | Reads in the different values of each hyperparameter to try. Automatically generates each combination.                                                                            | `parameter_choices` (`dict` of `str:list`): Hyperparameter names and their corresponding values to try.                                                                                         |
+| `set_non_tuneable_hyperparameters(non_tuneable_hyperparameter_choice)` | Reads in values for non-tuneable hyperparameters.                                                                                                                                  | `non_tuneable_hyperparameter_choices` (`dict` of `str:int`): Non-tuneable hyperparameters that do not need to appear in the tuning output CSV.                                                  |
+| `set_features(ningxiang_output)`                 | Reads in feature combinations for tuning.                                                                                                                                         | `ningxiang_output` (`dict` of `tuple:float`): Feature combinations for tuning.                                                                                                                  |
+| `set_tuning_result_saving_address(address)`      | Sets the saving address for the tuning output CSV.                                                                                                                                | `address` (`str`): Does not need to include `.csv`.                                                                                                                                             |
+| `tune(key_stats_only = False)`                   | Begins the tuning process.                                                                                                                                                        | `key_stats_only` (`bool`): If `True`, calculates only key statistics and skips non-important stats.                                                                                             |
+| `tune_parallel(part, splits, key_stats_only = False)` | Begins the tuning process, splitting all combinations into parts and tuning the specified part.                                                                                   | `part` (`int`): The specific part to tune. <br> `splits` (`int`): The number of splits. <br> `key_stats_only` (`bool`): If `True`, calculates only key statistics and skips non-important stats. |
+| `read_in_tuning_result_df(address)`              | Reads in an existing DataFrame from a `.csv` file consisting of tuning results. Automatically populates the result array and checked array if CSV columns match parameter choices. | `address` (`str`): Must include `.csv`.                                                                                                                                                         |
+| `set_tuning_best_model_saving_address(address)`  | Sets the address for exporting the best model as a pickle file.                                                                                                                   | `address` (`str`): Does not need to include `.pickle`.                                                                                                                                          |
+| `view_best_combo_and_score()`                    | Views the current best combination and its validation score.                                                                                                                      | N/A                                                                                                                                                                                             |
+
+### Attributes
+| **Attribute**                                | **Type**            |
+|----------------------------------------------|---------------------|
+| `hyperparameters`                            | `list`              |
+| `feature_n_ningxiang_score_dict`             | `Dictionary`        |
+| `str:float`                                  | `str:float`         |
+| `non_tuneable_parameter_choices`             | `Dictionary`        |
+| `str:str/float/int`                          | `str:str/float/int` |
+| `checked`                                    | `np.array`          |
+| `result`                                     | `np.array`          |
+| `checked_core`                               | `np.array`          |
+| `been_cruised`                               | `np.array`          |
+| `combo`                                      | `np.array`          |
+| `been_best`                                  | `np.array`          |
+| `tuning_result_saving_address`               | `str`               |
+| `best_model_saving_address`                  | `str`               |
+| `best_score = -np.inf`                       | `int`               |
+| `best_combo`                                 | `list`              |
+| `best_clf`                                   | `model object`      |
+| `clf_type`                                   | `str` – 'Regression' or 'Classification' |
+| `n_items`                                    | `list` - Denotes how many values in each hyperparameter dimension |
 
 # *Usage Examples*
 ## *Create Dataset*
@@ -322,6 +412,32 @@ X_class_2_df_val, X_class_2_df_test, y_class_2_series_val, y_class_2_series_test
         random_state=42,
     )
 )
+
+# 10CV
+# regression
+X_reg_df_train = X_reg_df_train.reset_index(drop=True)
+y_reg_series = y_reg_series.reset_index(drop=True)
+kf = KFold(n_splits=10, shuffle=True, random_state=42)
+reg_cv_splits = list(kf.split(X_reg_df_train, y_reg_series))
+
+train_X_reg_list = [X_reg_df_train.iloc[train_idx] for train_idx, _ in reg_cv_splits]
+val_y_reg_list = [y_reg_series.iloc[train_idx] for train_idx, _ in reg_cv_splits]
+
+val_X_reg_list = [X_reg_df_train.iloc[val_idx] for _, val_idx in reg_cv_splits]
+val_y_reg_list = [y_reg_series.iloc[val_idx] for _, val_idx in reg_cv_splits]
+
+# classification
+X_class_2_df_train = X_class_2_df_train.reset_index(drop=True)
+y_class_2_series_train = y_class_2_series_train.reset_index(drop=True)
+kf = KFold(n_splits=10, shuffle=True, random_state=42)
+class_2_cv_splits = list(kf.split(X_class_2_df_train, y_class_2_series_train))
+
+train_X_class_2_list = [X_class_2_df_train.iloc[train_idx] for train_idx, _ in class_2_cv_splits]
+train_y_class_2_list = [y_class_2_series_train.iloc[train_idx] for train_idx, _ in class_2_cv_splits]
+
+val_X_class_2_list = [X_class_2_df_train.iloc[val_idx] for _, val_idx in class_2_cv_splits]
+val_y_class_2_list = [y_class_2_series_train.iloc[val_idx] for _, val_idx in class_2_cv_splits]
+
 ```
 
 ## *NingXiang Example*
@@ -508,6 +624,115 @@ tuner.set_tuning_result_saving_address(
 # set up where to save the current best model
 tuner.set_best_model_saving_address(
     "yangzhou_test_tuning_best_model"
+)
+
+tuner.tune()
+```
+
+## *JiaoCheng_10CV Example*
+```python
+# CLASSIFICATION, WITH FEATURES TUNED AS HYPERPARAMETER
+
+from JXAutoML.JiaoCheng_10CV import JiaoCheng_10CV as tuner
+from sklearn.ensemble import RandomForestClassifier as clf
+
+# what values to try for each hyperparameter
+parameter_choices = {
+    "max_depth": (3, 6, 12, 24),
+    "max_samples": (0.4, 0.55, 0.7, 0.85),
+}
+
+# what values to set non-tuneable parameters/hyperparameters
+non_tunable_hyperparameters_dict = {"random_state": 42, "n_jobs": -1}
+
+tuning_order = ["features", "max_depth", "max_samples"]
+default_hyperparameter_values = {"features": 0, "max_depth": 3, "max_samples": 0.4}
+
+tuner = tuner()
+
+# define what model we are tuning
+tuner.read_in_model(
+    clf, 'Classification', pytorch_model=False, optimised_metric='accuracy'
+)
+
+# read in the data for training and validation
+tuner.read_in_data(train_X_class_2_list, train_y_class_2_list, val_X_class_2_list, val_y_class_2_list)
+
+# set what hp values to tune
+tuner.set_hyperparameters(parameter_choices)
+# WARNING: this may take a while if no. tuneable hyperparameters are large
+
+# set up hp values that need to be changed from default but NOT to be tuned
+tuner.set_non_tuneable_hyperparameters(non_tunable_hyperparameters_dict)
+
+# set up feature importance ordering
+tuner.set_features(class_feature_order_dict)
+# WARNING: this may take a while if no. tuneable hyperparameters are large
+
+# set up the order of hyperparameters when iteratively tuning using JiaoCheng
+tuner.set_tuning_order(tuning_order)
+
+# set up the default hp values for first iteration of tuning JiaoCheng
+tuner.set_hyperparameter_default_values(default_hyperparameter_values)
+
+# set up where to save the tuning result csv
+tuner.set_tuning_result_saving_address(
+    'jiaocheng10cv_test_tuning_result.csv'
+)
+
+# set up where to save the current best model
+tuner.set_best_model_saving_address(
+    'jiaocheng10cv_test_tuning_best_model'
+)
+
+tuner.tune()
+```
+
+## *YangZhou_10CV Example*
+```python
+# CLASSIFICATION, WITH FEATURES TUNED AS HYPERPARAMETER
+from JXAutoML.YangZhouB_10CV import YangZhouB_10CV as tuner
+from sklearn.ensemble import RandomForestClassifier as clf
+
+# what values to try for each hyperparameter
+parameter_choices = {
+    "max_depth": (3, 6, 12, 24),
+    "max_samples": (0.4, 0.55, 0.7, 0.85),
+}
+
+# what values to set non-tuneable parameters/hyperparameters
+non_tunable_hyperparameters_dict = {"random_state": 42, "n_jobs": -1}
+
+tuner = tuner()
+
+# define what model we are tuning
+tuner.read_in_model(
+    clf, 'Classification', pytorch_model=False, optimised_metric='accuracy'
+)
+
+# read in the data for training and validation
+tuner.read_in_data(train_X_class_2_list, train_y_class_2_list, val_X_class_2_list, val_y_class_2_list)
+
+# set what hp values to tune
+tuner.set_hyperparameters(parameter_choices)
+# WARNING: this may take a while if no. tuneable hyperparameters are large
+
+# set up hp values that need to be changed from default but NOT to be tuned
+tuner.set_non_tuneable_hyperparameters(non_tunable_hyperparameters_dict)
+
+# set up feature importance ordering
+
+tuner.set_features(class_feature_order_dict)
+# WARNING: this may take a while if no. tuneable hyperparameters are large
+
+# set up where to save the tuning result csv
+tuner.set_tuning_result_saving_address(
+    "yangzhou10cv_test_tuning_result.csv"
+)
+
+# set up where to save the current best model
+tuner.set_best_model_saving_address(
+    "yangzhou10cv_test_tuning_best_model"
 )
 
 tuner.tune()
