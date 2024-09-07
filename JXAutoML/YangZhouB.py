@@ -1089,7 +1089,7 @@ class YangZhouB:
             tmp_val_x = self.val_x
             tmp_test_x = self.test_x
 
-            if self.pytorch_model:
+            if self.pytorch_model and "input_dim" not in self.hyperparameters:
                 params["input_dim"] = len(list(self.train_x.columns))
 
             # add non tuneable parameters

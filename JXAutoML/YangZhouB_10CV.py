@@ -152,7 +152,8 @@ class YangZhouB_10CV:
         self.hyperparameters = list(parameter_choices.keys())
 
         # automatically calculate how many different values in each hyperparameter
-        self.n_items = [len(parameter_choices[key]) for key in self.hyperparameters]
+        self.n_items = [len(parameter_choices[key])
+                        for key in self.hyperparameters]
         self.num_hyperparameters = {
             hyperparameter: len(parameter_choices[hyperparameter])
             for hyperparameter in self.hyperparameters
@@ -198,7 +199,8 @@ class YangZhouB_10CV:
 
         tune_result_columns = copy.deepcopy(self.hyperparameters)
 
-        self.tuning_result = pd.DataFrame({col: list() for col in tune_result_columns})
+        self.tuning_result = pd.DataFrame(
+            {col: list() for col in tune_result_columns})
 
     def set_non_tuneable_hyperparameters(self, non_tuneable_hyperparameter_choice):
         """Input Non tuneable hyperparameter choice"""
@@ -427,7 +429,8 @@ class YangZhouB_10CV:
         max_surrounding_mean, max_surrounding_sd = self._get_max_surrounding_mean_sd()
 
         warning_threshold = self._cruise_warning_threshold(
-            max_surrounding_mean, max_surrounding_sd, len(self._surrounding_vectors)
+            max_surrounding_mean, max_surrounding_sd, len(
+                self._surrounding_vectors)
         )
 
         # check each cruise combo
@@ -490,7 +493,8 @@ class YangZhouB_10CV:
 
         for i in range(len(surrounding_combos)):
 
-            diff = self.result[tuple(core)] - self.result[tuple(surrounding_combos[i])]
+            diff = self.result[tuple(core)] - \
+                self.result[tuple(surrounding_combos[i])]
 
             if diff <= 0.005:
                 if self.checked_core[tuple(surrounding_combos[i])] == 0:
@@ -618,7 +622,8 @@ class YangZhouB_10CV:
 
             self.been_best[tuple(self.best_combo)] = 1
 
-            surrounding_combos = self._get_surrounding_step_combos(self.best_combo)
+            surrounding_combos = self._get_surrounding_step_combos(
+                self.best_combo)
             for combo in surrounding_combos:
 
                 if self.checked[tuple(combo)] == 0:
@@ -651,7 +656,8 @@ class YangZhouB_10CV:
             )
 
         if self.model is None:
-            raise AttributeError(" Missing model, please run .read_in_model() ")
+            raise AttributeError(
+                " Missing model, please run .read_in_model() ")
 
         if self.tuning_result_saving_address is None:
             raise AttributeError(
@@ -683,7 +689,8 @@ class YangZhouB_10CV:
                 self._check_already_trained_best_score(combo)
 
         # SECOND: from the core combo, begin guidance system
-        self._surrounding_vectors = self._get_surrounding_step_vectors(self._core)
+        self._surrounding_vectors = self._get_surrounding_step_vectors(
+            self._core)
 
         print("\n")
         print("STAGE ONE: Begin initial Guidance system\n\n")
@@ -739,7 +746,8 @@ class YangZhouB_10CV:
             except:
                 pass
             try:
-                val_rmse = np.sqrt(mean_squared_error(self.val_y_list[i], val_pred))
+                val_rmse = np.sqrt(mean_squared_error(
+                    self.val_y_list[i], val_pred))
             except:
                 pass
 
@@ -759,12 +767,15 @@ class YangZhouB_10CV:
 
             df_building_dict["Train r2" + f" {i}"] = [np.round(train_score, 6)]
             df_building_dict["Val r2" + f" {i}"] = [np.round(val_score, 6)]
-            df_building_dict["Train rmse" + f" {i}"] = [np.round(train_rmse, 6)]
+            df_building_dict["Train rmse" +
+                             f" {i}"] = [np.round(train_rmse, 6)]
             df_building_dict["Val rmse" + f" {i}"] = [np.round(val_rmse, 6)]
 
             if self.key_stats_only == False:
-                df_building_dict["Train mape" + f" {i}"] = [np.round(train_mape, 6)]
-                df_building_dict["Val mape" + f" {i}"] = [np.round(val_mape, 6)]
+                df_building_dict["Train mape" +
+                                 f" {i}"] = [np.round(train_mape, 6)]
+                df_building_dict["Val mape" +
+                                 f" {i}"] = [np.round(val_mape, 6)]
 
         elif self.clf_type == "Classification":
 
@@ -784,11 +795,13 @@ class YangZhouB_10CV:
                 pass
 
             try:
-                train_f1 = f1_score(self.train_y_list[i], train_pred, average="binary")
+                train_f1 = f1_score(
+                    self.train_y_list[i], train_pred, average="binary")
             except:
                 pass
             try:
-                val_f1 = f1_score(self.val_y_list[i], val_pred, average="binary")
+                val_f1 = f1_score(
+                    self.val_y_list[i], val_pred, average="binary")
             except:
                 pass
 
@@ -826,7 +839,8 @@ class YangZhouB_10CV:
                 except:
                     pass
                 try:
-                    val_bal_accu = balanced_accuracy_score(self.val_y_list[i], val_pred)
+                    val_bal_accu = balanced_accuracy_score(
+                        self.val_y_list[i], val_pred)
                 except:
                     pass
                 try:
@@ -838,24 +852,31 @@ class YangZhouB_10CV:
                 except:
                     pass
                 try:
-                    train_ap = average_precision_score(self.train_y_list[i], train_pred)
+                    train_ap = average_precision_score(
+                        self.train_y_list[i], train_pred)
                 except:
                     pass
                 try:
-                    val_ap = average_precision_score(self.val_y_list[i], val_pred)
+                    val_ap = average_precision_score(
+                        self.val_y_list[i], val_pred)
                 except:
                     pass
 
-            df_building_dict["Train accuracy" + f" {i}"] = [np.round(train_score, 6)]
-            df_building_dict["Val accuracy" + f" {i}"] = [np.round(val_score, 6)]
+            df_building_dict["Train accuracy" +
+                             f" {i}"] = [np.round(train_score, 6)]
+            df_building_dict["Val accuracy" +
+                             f" {i}"] = [np.round(val_score, 6)]
             df_building_dict["Train f1" + f" {i}"] = [np.round(train_f1, 6)]
             df_building_dict["Val f1" + f" {i}"] = [np.round(val_f1, 6)]
             df_building_dict["Train precision" + f" {i}"] = [
                 np.round(train_precision, 6)
             ]
-            df_building_dict["Val precision" + f" {i}"] = [np.round(val_precision, 6)]
-            df_building_dict["Train recall" + f" {i}"] = [np.round(train_recall, 6)]
-            df_building_dict["Val recall" + f" {i}"] = [np.round(val_recall, 6)]
+            df_building_dict["Val precision" +
+                             f" {i}"] = [np.round(val_precision, 6)]
+            df_building_dict["Train recall" +
+                             f" {i}"] = [np.round(train_recall, 6)]
+            df_building_dict["Val recall" +
+                             f" {i}"] = [np.round(val_recall, 6)]
 
             if self.key_stats_only == False:
                 df_building_dict["Train balanced_accuracy" + f" {i}"] = [
@@ -864,9 +885,11 @@ class YangZhouB_10CV:
                 df_building_dict["Val balanced_accuracy" + f" {i}"] = [
                     np.round(val_bal_accu, 6)
                 ]
-                df_building_dict["Train AUC" + f" {i}"] = [np.round(train_auc, 6)]
+                df_building_dict["Train AUC" +
+                                 f" {i}"] = [np.round(train_auc, 6)]
                 df_building_dict["Val AUC" + f" {i}"] = [np.round(val_auc, 6)]
-                df_building_dict["Train AP" + f" {i}"] = [np.round(train_ap, 6)]
+                df_building_dict["Train AP" +
+                                 f" {i}"] = [np.round(train_ap, 6)]
                 df_building_dict["Val AP" + f" {i}"] = [np.round(val_ap, 6)]
 
         return df_building_dict
@@ -907,7 +930,8 @@ class YangZhouB_10CV:
                 # initialise object
                 clf = self.model(**params)
 
-                params["features"] = [list(self._feature_combo_n_index_map[combo[-1]])]
+                params["features"] = [
+                    list(self._feature_combo_n_index_map[combo[-1]])]
                 params["n_columns"] = len(
                     list(self._feature_combo_n_index_map[combo[-1]])
                 )
@@ -917,8 +941,9 @@ class YangZhouB_10CV:
                 tmp_train_x = self.train_x_list[i]
                 tmp_val_x = self.val_x_list[i]
 
-                if self.pytorch_model:
-                    params["input_dim"] = len(list(self.train_x_list[i].columns))
+                if self.pytorch_model and "input_dim" not in self.hyperparameters:
+                    params["input_dim"] = len(
+                        list(self.train_x_list[i].columns))
 
                 # add non tuneable parameters
                 for nthp in self.non_tuneable_parameter_choices:
@@ -1042,7 +1067,8 @@ class YangZhouB_10CV:
         if self.result[combo] > self.best_score:
             self.best_score = self.result[combo]
             self.best_clf = None
-            print(f"As new Best Combo {combo} was read in, best_clf is set to None")
+            print(
+                f"As new Best Combo {combo} was read in, best_clf is set to None")
             self.best_combo = combo
 
         print(
@@ -1065,7 +1091,8 @@ class YangZhouB_10CV:
     def view_best_combo_and_score(self):
         """View best combination and its validation score"""
 
-        max_val_id = self.tuning_result[f"Mean Val {self.optimised_metric}"].idxmax()
+        max_val_id = self.tuning_result[f"Mean Val {self.optimised_metric}"].idxmax(
+        )
 
         print(f"Max Val Score: \n", self.best_score)
         print(
@@ -1141,7 +1168,8 @@ class YangZhouB_10CV:
             )
 
         if self.clf_type is None:
-            raise AttributeError("Missing clf_type. Please run .read_in_model() first.")
+            raise AttributeError(
+                "Missing clf_type. Please run .read_in_model() first.")
 
         self.tuning_result = pd.read_csv(address)
 

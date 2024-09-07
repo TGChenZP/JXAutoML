@@ -176,7 +176,8 @@ class JiaoCheng:
         self.hyperparameters = list(parameter_choices.keys())
 
         # automatically calculate how many different values in each hyperparameter
-        self.n_items = [len(parameter_choices[key]) for key in self.hyperparameters]
+        self.n_items = [len(parameter_choices[key])
+                        for key in self.hyperparameters]
         self._total_combos = np.prod(self.n_items)
 
         # automatically calculate all combinations and setup checked and result arrays and tuning result dataframe
@@ -241,11 +242,13 @@ class JiaoCheng:
 
         # Different set of metric columns for different types of models
         if self.clf_type == "Classification":
-            tune_result_columns.extend(self.classification_extra_output_columns)
+            tune_result_columns.extend(
+                self.classification_extra_output_columns)
         elif self.clf_type == "Regression":
             tune_result_columns.extend(self.regression_extra_output_columns)
 
-        self.tuning_result = pd.DataFrame({col: list() for col in tune_result_columns})
+        self.tuning_result = pd.DataFrame(
+            {col: list() for col in tune_result_columns})
 
     def set_non_tuneable_hyperparameters(self, non_tuneable_hyperparameter_choice):
         """Input Non tuneable hyperparameter choice"""
@@ -418,7 +421,8 @@ class JiaoCheng:
             )
 
         if self.model is None:
-            raise AttributeError(" Missing model, please run .read_in_model() ")
+            raise AttributeError(
+                " Missing model, please run .read_in_model() ")
 
         if self.combos is None:
             raise AttributeError(
@@ -560,8 +564,10 @@ class JiaoCheng:
             df_building_dict["Train r2"] = [
                 np.round(metrics_dict.get("train_r2", 0), 6)
             ]
-            df_building_dict["Val r2"] = [np.round(metrics_dict.get("val_r2", 0), 6)]
-            df_building_dict["Test r2"] = [np.round(metrics_dict.get("test_r2", 0), 6)]
+            df_building_dict["Val r2"] = [
+                np.round(metrics_dict.get("val_r2", 0), 6)]
+            df_building_dict["Test r2"] = [
+                np.round(metrics_dict.get("test_r2", 0), 6)]
             df_building_dict["Train rmse"] = [
                 np.round(metrics_dict.get("train_rmse", 0), 6)
             ]
@@ -592,11 +598,13 @@ class JiaoCheng:
             except:
                 pass
             try:
-                metrics_dict["val_accuracy"] = accuracy_score(self.val_y, val_pred)
+                metrics_dict["val_accuracy"] = accuracy_score(
+                    self.val_y, val_pred)
             except:
                 pass
             try:
-                metrics_dict["test_accuracy"] = accuracy_score(self.test_y, test_pred)
+                metrics_dict["test_accuracy"] = accuracy_score(
+                    self.test_y, test_pred)
             except:
                 pass
 
@@ -697,15 +705,18 @@ class JiaoCheng:
                     pass
 
                 try:
-                    metrics_dict["train_auc"] = roc_auc_score(self.train_y, train_pred)
+                    metrics_dict["train_auc"] = roc_auc_score(
+                        self.train_y, train_pred)
                 except:
                     pass
                 try:
-                    metrics_dict["val_auc"] = roc_auc_score(self.val_y, val_pred)
+                    metrics_dict["val_auc"] = roc_auc_score(
+                        self.val_y, val_pred)
                 except:
                     pass
                 try:
-                    metrics_dict["test_auc"] = roc_auc_score(self.test_y, test_pred)
+                    metrics_dict["test_auc"] = roc_auc_score(
+                        self.test_y, test_pred)
                 except:
                     pass
 
@@ -721,8 +732,10 @@ class JiaoCheng:
             df_building_dict["Train f1"] = [
                 np.round(metrics_dict.get("train_f1", 0), 6)
             ]
-            df_building_dict["Val f1"] = [np.round(metrics_dict.get("val_f1", 0), 6)]
-            df_building_dict["Test f1"] = [np.round(metrics_dict.get("test_f1", 0), 6)]
+            df_building_dict["Val f1"] = [
+                np.round(metrics_dict.get("val_f1", 0), 6)]
+            df_building_dict["Test f1"] = [
+                np.round(metrics_dict.get("test_f1", 0), 6)]
             df_building_dict["Train precision"] = [
                 np.round(metrics_dict.get("train_precision", 0), 6)
             ]
@@ -791,9 +804,12 @@ class JiaoCheng:
 
         if self._tune_features == True:
             del params["features"]
-            tmp_train_x = self.train_x[list(self._feature_combo_n_index_map[combo[-1]])]
-            tmp_val_x = self.val_x[list(self._feature_combo_n_index_map[combo[-1]])]
-            tmp_test_x = self.test_x[list(self._feature_combo_n_index_map[combo[-1]])]
+            tmp_train_x = self.train_x[list(
+                self._feature_combo_n_index_map[combo[-1]])]
+            tmp_val_x = self.val_x[list(
+                self._feature_combo_n_index_map[combo[-1]])]
+            tmp_test_x = self.test_x[list(
+                self._feature_combo_n_index_map[combo[-1]])]
 
             if self.pytorch_model:
                 params["input_dim"] = len(
@@ -807,8 +823,10 @@ class JiaoCheng:
             # initialise object
             clf = self.model(**params)
 
-            params["features"] = [list(self._feature_combo_n_index_map[combo[-1]])]
-            params["n_columns"] = len(list(self._feature_combo_n_index_map[combo[-1]]))
+            params["features"] = [
+                list(self._feature_combo_n_index_map[combo[-1]])]
+            params["n_columns"] = len(
+                list(self._feature_combo_n_index_map[combo[-1]]))
             params["n_features"] = combo[-1]
             params["feature combo ningxiang score"] = (
                 self.feature_n_ningxiang_score_dict[
@@ -821,7 +839,7 @@ class JiaoCheng:
             tmp_val_x = self.val_x
             tmp_test_x = self.test_x
 
-            if self.pytorch_model:
+            if self.pytorch_model and "input_dim" not in self.hyperparameters:
                 params["input_dim"] = len(list(self.train_x.columns))
 
             # add non tuneable parameters
@@ -890,7 +908,8 @@ class JiaoCheng:
         if self.result[combo] > self.best_score:
             self.best_score = self.result[combo]
             self.best_clf = None
-            print(f"As new Best Combo {combo} was read in, best_clf is set to None")
+            print(
+                f"As new Best Combo {combo} was read in, best_clf is set to None")
             self.best_combo = combo
 
         print(
@@ -915,7 +934,8 @@ class JiaoCheng:
 
         print("Max Val Score: \n", self.best_score)
 
-        max_val_id = self.tuning_result[f"Val {self.optimised_metric}"].idxmax()
+        max_val_id = self.tuning_result[f"Val {self.optimised_metric}"].idxmax(
+        )
         print(
             "Best Combo Test Score: \n",
             self.tuning_result.iloc[max_val_id][f"Test {self.optimised_metric}"],
@@ -980,7 +1000,8 @@ class JiaoCheng:
             )
 
         if self.clf_type is None:
-            raise AttributeError("Missing clf_type. Please run .read_in_model() first.")
+            raise AttributeError(
+                "Missing clf_type. Please run .read_in_model() first.")
 
         self.tuning_result = pd.read_csv(address)
 
