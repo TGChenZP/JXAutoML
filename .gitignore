@@ -5,4 +5,4 @@ dist/
 *.egg-info/
 
 *local_test_output/
-output_log.txt
+*.txt
