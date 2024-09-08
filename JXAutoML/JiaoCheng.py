@@ -62,6 +62,7 @@ class JiaoCheng:
         self.best_model_saving_address = None
         self.pytorch_model = False
         self.optimised_metric = False
+        self.pytorch_graph_model = False
 
         self.regression_extra_output_columns = [
             "Train r2",
@@ -115,7 +116,7 @@ class JiaoCheng:
         self.test_y = test_y
         print("Read in Test y data")
 
-    def read_in_model(self, model, type, optimised_metric=None, pytorch_model=False):
+    def read_in_model(self, model, type, optimised_metric=None, pytorch_model=False, pytorch_graph_model=False):
         """Reads in underlying model object for tuning, and also read in what type of model it is"""
 
         assert type == "Classification" or type == "Regression"  # check
@@ -154,6 +155,7 @@ class JiaoCheng:
         self.model = model
 
         self.pytorch_model = pytorch_model
+        self.pytorch_graph_model = pytorch_graph_model
 
         print(
             f"Successfully read in model {self.model}, which is a {self.clf_type} model optimising for {self.optimised_metric}"
@@ -507,288 +509,254 @@ class JiaoCheng:
 
         metrics_dict = dd(float)
 
-        if self.clf_type == "Regression":
+        tmp_train_y = self.train_y.copy()
+        tmp_val_y = self.val_y.copy()
+        tmp_test_y = self.test_y.copy()
+
+        if self.pytorch_graph_model:
+            target_columns = [
+                target_column for target_column in self.train_y.columns if target_column != 'idx']
+
+            if len(target_columns) == 1:
+                tmp_train_y = tmp_train_y[target_columns[0]]
+                tmp_val_y = tmp_val_y[target_columns[0]]
+                tmp_test_y = tmp_test_y[target_columns[0]]
+            else:
+                tmp_train_y = tmp_train_y[target_columns]
+                tmp_val_y = tmp_val_y[target_columns]
+                tmp_test_y = tmp_test_y[target_columns]
+
+        if self.clf_type == 'Regression':
 
             try:
-                metrics_dict["train_r2"] = r2_score(self.train_y, train_pred)
+                metrics_dict['train_r2'] = r2_score(
+                    tmp_train_y, train_pred)
             except:
                 pass
             try:
-                metrics_dict["val_r2"] = r2_score(self.val_y, val_pred)
+                metrics_dict['val_r2'] = r2_score(tmp_val_y, val_pred)
             except:
                 pass
             try:
-                metrics_dict["test_r2"] = r2_score(self.test_y, test_pred)
-            except:
-                pass
-
-            try:
-                metrics_dict["train_rmse"] = np.sqrt(
-                    mean_squared_error(self.train_y, train_pred)
-                )
-            except:
-                pass
-            try:
-                metrics_dict["val_rmse"] = np.sqrt(
-                    mean_squared_error(self.val_y, val_pred)
-                )
-            except:
-                pass
-            try:
-                metrics_dict["test_rmse"] = np.sqrt(
-                    mean_squared_error(self.test_y, test_pred)
-                )
-            except:
-                pass
-
-            if self.key_stats_only == True:
-                try:
-                    metrics_dict["train_mape"] = mean_absolute_percentage_error(
-                        self.train_y, train_pred
-                    )
-                except:
-                    pass
-                try:
-                    metrics_dict["val_mape"] = mean_absolute_percentage_error(
-                        self.val_y, val_pred
-                    )
-                except:
-                    pass
-                try:
-                    metrics_dict["test_mape"] = mean_absolute_percentage_error(
-                        self.test_y, test_pred
-                    )
-                except:
-                    pass
-
-            df_building_dict["Train r2"] = [
-                np.round(metrics_dict.get("train_r2", 0), 6)
-            ]
-            df_building_dict["Val r2"] = [
-                np.round(metrics_dict.get("val_r2", 0), 6)]
-            df_building_dict["Test r2"] = [
-                np.round(metrics_dict.get("test_r2", 0), 6)]
-            df_building_dict["Train rmse"] = [
-                np.round(metrics_dict.get("train_rmse", 0), 6)
-            ]
-            df_building_dict["Val rmse"] = [
-                np.round(metrics_dict.get("val_rmse", 0), 6)
-            ]
-            df_building_dict["Test rmse"] = [
-                np.round(metrics_dict.get("test_rmse", 0), 6)
-            ]
-
-            if self.key_stats_only == True:
-                df_building_dict["Train mape"] = [
-                    np.round(metrics_dict.get("train_mape", 0), 6)
-                ]
-                df_building_dict["Val mape"] = [
-                    np.round(metrics_dict.get("val_mape", 0), 6)
-                ]
-                df_building_dict["Test mape"] = [
-                    np.round(metrics_dict.get("test_mape", 0), 6)
-                ]
-
-        elif self.clf_type == "Classification":
-
-            try:
-                metrics_dict["train_accuracy"] = accuracy_score(
-                    self.train_y, train_pred
-                )
-            except:
-                pass
-            try:
-                metrics_dict["val_accuracy"] = accuracy_score(
-                    self.val_y, val_pred)
-            except:
-                pass
-            try:
-                metrics_dict["test_accuracy"] = accuracy_score(
-                    self.test_y, test_pred)
+                metrics_dict['test_r2'] = r2_score(tmp_test_y, test_pred)
             except:
                 pass
 
             try:
-                metrics_dict["train_f1"] = f1_score(
-                    self.train_y, train_pred, average="weighted"
-                )
+                metrics_dict['train_rmse'] = np.sqrt(
+                    mean_squared_error(tmp_train_y, train_pred))
             except:
                 pass
             try:
-                metrics_dict["val_f1"] = f1_score(
-                    self.val_y, val_pred, average="weighted"
-                )
+                metrics_dict['val_rmse'] = np.sqrt(
+                    mean_squared_error(tmp_val_y, val_pred))
             except:
                 pass
             try:
-                metrics_dict["test_f1"] = f1_score(
-                    self.test_y, test_pred, average="weighted"
-                )
-            except:
-                pass
-
-            try:
-                metrics_dict["train_precision"] = precision_score(
-                    self.train_y, train_pred, average="weighted"
-                )
-            except:
-                pass
-            try:
-                metrics_dict["val_precision"] = precision_score(
-                    self.val_y, val_pred, average="weighted"
-                )
-            except:
-                pass
-            try:
-                metrics_dict["test_precision"] = precision_score(
-                    self.test_y, test_pred, average="weighted"
-                )
-            except:
-                pass
-
-            try:
-                metrics_dict["train_recall"] = recall_score(
-                    self.train_y, train_pred, average="weighted"
-                )
-            except:
-                pass
-            try:
-                metrics_dict["val_recall"] = recall_score(
-                    self.val_y, val_pred, average="weighted"
-                )
-            except:
-                pass
-            try:
-                metrics_dict["test_recall"] = recall_score(
-                    self.test_y, test_pred, average="weighted"
-                )
+                metrics_dict['test_rmse'] = np.sqrt(
+                    mean_squared_error(tmp_test_y, test_pred))
             except:
                 pass
 
             if self.key_stats_only == True:
                 try:
-                    metrics_dict["train_bal_accu"] = balanced_accuracy_score(
-                        self.train_y, train_pred
-                    )
+                    metrics_dict['train_mape'] = mean_absolute_percentage_error(
+                        tmp_train_y, train_pred)
                 except:
                     pass
                 try:
-                    metrics_dict["val_bal_accu"] = balanced_accuracy_score(
-                        self.val_y, val_pred
-                    )
+                    metrics_dict['val_mape'] = mean_absolute_percentage_error(
+                        tmp_val_y, val_pred)
                 except:
                     pass
                 try:
-                    metrics_dict["test_bal_accu"] = balanced_accuracy_score(
-                        self.test_y, test_pred
-                    )
+                    metrics_dict['test_mape'] = mean_absolute_percentage_error(
+                        tmp_test_y, test_pred)
                 except:
                     pass
 
-                try:
-                    metrics_dict["train_ap"] = average_precision_score(
-                        self.train_y, train_pred
-                    )
-                except:
-                    pass
-                try:
-                    metrics_dict["val_ap"] = average_precision_score(
-                        self.val_y, val_pred
-                    )
-                except:
-                    pass
-                try:
-                    metrics_dict["test_ap"] = average_precision_score(
-                        self.test_y, test_pred
-                    )
-                except:
-                    pass
-
-                try:
-                    metrics_dict["train_auc"] = roc_auc_score(
-                        self.train_y, train_pred)
-                except:
-                    pass
-                try:
-                    metrics_dict["val_auc"] = roc_auc_score(
-                        self.val_y, val_pred)
-                except:
-                    pass
-                try:
-                    metrics_dict["test_auc"] = roc_auc_score(
-                        self.test_y, test_pred)
-                except:
-                    pass
-
-            df_building_dict["Train accuracy"] = [
-                np.round(metrics_dict.get("train_accuracy", 0), 6)
-            ]
-            df_building_dict["Val accuracy"] = [
-                np.round(metrics_dict.get("val_accuracy", 0), 6)
-            ]
-            df_building_dict["Test accuracy"] = [
-                np.round(metrics_dict.get("val_accuracy", 0), 6)
-            ]
-            df_building_dict["Train f1"] = [
-                np.round(metrics_dict.get("train_f1", 0), 6)
-            ]
-            df_building_dict["Val f1"] = [
-                np.round(metrics_dict.get("val_f1", 0), 6)]
-            df_building_dict["Test f1"] = [
-                np.round(metrics_dict.get("test_f1", 0), 6)]
-            df_building_dict["Train precision"] = [
-                np.round(metrics_dict.get("train_precision", 0), 6)
-            ]
-            df_building_dict["Val precision"] = [
-                np.round(metrics_dict.get("val_precision", 0), 6)
-            ]
-            df_building_dict["Test precision"] = [
-                np.round(metrics_dict.get("test_precision", 0), 6)
-            ]
-            df_building_dict["Train recall"] = [
-                np.round(metrics_dict.get("train_recall", 0), 6)
-            ]
-            df_building_dict["Val recall"] = [
-                np.round(metrics_dict.get("val_recall", 0), 6)
-            ]
-            df_building_dict["Test recall"] = [
-                np.round(metrics_dict.get("test_recall", 0), 6)
-            ]
+            df_building_dict['Train r2'] = [
+                np.round(metrics_dict.get('train_r2', 0), 6)]
+            df_building_dict['Val r2'] = [
+                np.round(metrics_dict.get('val_r2', 0), 6)]
+            df_building_dict['Test r2'] = [
+                np.round(metrics_dict.get('test_r2', 0), 6)]
+            df_building_dict['Train rmse'] = [
+                np.round(metrics_dict.get('train_rmse', 0), 6)]
+            df_building_dict['Val rmse'] = [
+                np.round(metrics_dict.get('val_rmse', 0), 6)]
+            df_building_dict['Test rmse'] = [
+                np.round(metrics_dict.get('test_rmse', 0), 6)]
 
             if self.key_stats_only == True:
-                df_building_dict["Train balanced_accuracy"] = [
-                    np.round(metrics_dict.get("train_bal_accu", 0), 6)
-                ]
-                df_building_dict["Val balanced_accuracy"] = [
-                    np.round(metrics_dict.get("val_bal_accu", 0), 6)
-                ]
-                df_building_dict["Test balanced_accuracy"] = [
-                    np.round(metrics_dict.get("test_bal_accu", 0), 6)
-                ]
-                df_building_dict["Train AP"] = [
-                    np.round(metrics_dict.get("train_ap", 0), 6)
-                ]
-                df_building_dict["Val AP"] = [
-                    np.round(metrics_dict.get("val_ap", 0), 6)
-                ]
-                df_building_dict["Test AP"] = [
-                    np.round(metrics_dict.get("test_ap", 0), 6)
-                ]
-                df_building_dict["Train AUC"] = [
-                    np.round(metrics_dict.get("train_auc", 0), 6)
-                ]
-                df_building_dict["Val AUC"] = [
-                    np.round(metrics_dict.get("val_auc", 0), 6)
-                ]
-                df_building_dict["Test AUC"] = [
-                    np.round(metrics_dict.get("test_auc", 0), 6)
-                ]
+                df_building_dict['Train mape'] = [
+                    np.round(metrics_dict.get('train_mape', 0), 6)]
+                df_building_dict['Val mape'] = [
+                    np.round(metrics_dict.get('val_mape', 0), 6)]
+                df_building_dict['Test mape'] = [
+                    np.round(metrics_dict.get('test_mape', 0), 6)]
 
-        return (
-            df_building_dict,
-            metrics_dict[f"val_{self.optimised_metric}"],
-            metrics_dict[f"test_{self.optimised_metric}"],
-        )
+        elif self.clf_type == 'Classification':
+
+            try:
+                metrics_dict['train_accuracy'] = accuracy_score(
+                    tmp_train_y, train_pred)
+            except:
+                pass
+            try:
+                metrics_dict['val_accuracy'] = accuracy_score(
+                    tmp_val_y, val_pred)
+            except:
+                pass
+            try:
+                metrics_dict['test_accuracy'] = accuracy_score(
+                    tmp_test_y, test_pred)
+            except:
+                pass
+
+            try:
+                metrics_dict['train_f1'] = f1_score(
+                    tmp_train_y, train_pred, average='weighted')
+            except:
+                pass
+            try:
+                metrics_dict['val_f1'] = f1_score(
+                    tmp_val_y, val_pred, average='weighted')
+            except:
+                pass
+            try:
+                metrics_dict['test_f1'] = f1_score(
+                    tmp_test_y, test_pred, average='weighted')
+            except:
+                pass
+
+            try:
+                metrics_dict['train_precision'] = precision_score(
+                    tmp_train_y, train_pred, average='weighted')
+            except:
+                pass
+            try:
+                metrics_dict['val_precision'] = precision_score(
+                    tmp_val_y, val_pred, average='weighted')
+            except:
+                pass
+            try:
+                metrics_dict['test_precision'] = precision_score(
+                    tmp_test_y, test_pred, average='weighted')
+            except:
+                pass
+
+            try:
+                metrics_dict['train_recall'] = recall_score(
+                    tmp_train_y, train_pred, average='weighted')
+            except:
+                pass
+            try:
+                metrics_dict['val_recall'] = recall_score(
+                    tmp_val_y, val_pred, average='weighted')
+            except:
+                pass
+            try:
+                metrics_dict['test_recall'] = recall_score(
+                    tmp_test_y, test_pred, average='weighted')
+            except:
+                pass
+
+            if self.key_stats_only == True:
+                try:
+                    metrics_dict['train_bal_accu'] = balanced_accuracy_score(
+                        tmp_train_y, train_pred)
+                except:
+                    pass
+                try:
+                    metrics_dict['val_bal_accu'] = balanced_accuracy_score(
+                        tmp_val_y, val_pred)
+                except:
+                    pass
+                try:
+                    metrics_dict['test_bal_accu'] = balanced_accuracy_score(
+                        tmp_test_y, test_pred)
+                except:
+                    pass
+
+                try:
+                    metrics_dict['train_ap'] = average_precision_score(
+                        tmp_train_y, train_pred)
+                except:
+                    pass
+                try:
+                    metrics_dict['val_ap'] = average_precision_score(
+                        tmp_val_y, val_pred)
+                except:
+                    pass
+                try:
+                    metrics_dict['test_ap'] = average_precision_score(
+                        tmp_test_y, test_pred)
+                except:
+                    pass
+
+                try:
+                    metrics_dict['train_auc'] = roc_auc_score(
+                        tmp_train_y, train_pred)
+                except:
+                    pass
+                try:
+                    metrics_dict['val_auc'] = roc_auc_score(
+                        tmp_val_y, val_pred)
+                except:
+                    pass
+                try:
+                    metrics_dict['test_auc'] = roc_auc_score(
+                        tmp_test_y, test_pred)
+                except:
+                    pass
+
+            df_building_dict['Train accuracy'] = [
+                np.round(metrics_dict.get('train_accuracy', 0), 6)]
+            df_building_dict['Val accuracy'] = [
+                np.round(metrics_dict.get('val_accuracy', 0), 6)]
+            df_building_dict['Test accuracy'] = [
+                np.round(metrics_dict.get('val_accuracy', 0), 6)]
+            df_building_dict['Train f1'] = [
+                np.round(metrics_dict.get('train_f1', 0), 6)]
+            df_building_dict['Val f1'] = [
+                np.round(metrics_dict.get('val_f1', 0), 6)]
+            df_building_dict['Test f1'] = [
+                np.round(metrics_dict.get('test_f1', 0), 6)]
+            df_building_dict['Train precision'] = [
+                np.round(metrics_dict.get('train_precision', 0), 6)]
+            df_building_dict['Val precision'] = [
+                np.round(metrics_dict.get('val_precision', 0), 6)]
+            df_building_dict['Test precision'] = [
+                np.round(metrics_dict.get('test_precision', 0), 6)]
+            df_building_dict['Train recall'] = [
+                np.round(metrics_dict.get('train_recall', 0), 6)]
+            df_building_dict['Val recall'] = [
+                np.round(metrics_dict.get('val_recall', 0), 6)]
+            df_building_dict['Test recall'] = [
+                np.round(metrics_dict.get('test_recall', 0), 6)]
+
+            if self.key_stats_only == True:
+                df_building_dict['Train balanced_accuracy'] = [
+                    np.round(metrics_dict.get('train_bal_accu', 0), 6)]
+                df_building_dict['Val balanced_accuracy'] = [
+                    np.round(metrics_dict.get('val_bal_accu', 0), 6)]
+                df_building_dict['Test balanced_accuracy'] = [
+                    np.round(metrics_dict.get('test_bal_accu', 0), 6)]
+                df_building_dict['Train AP'] = [
+                    np.round(metrics_dict.get('train_ap', 0), 6)]
+                df_building_dict['Val AP'] = [
+                    np.round(metrics_dict.get('val_ap', 0), 6)]
+                df_building_dict['Test AP'] = [
+                    np.round(metrics_dict.get('test_ap', 0), 6)]
+                df_building_dict['Train AUC'] = [
+                    np.round(metrics_dict.get('train_auc', 0), 6)]
+                df_building_dict['Val AUC'] = [
+                    np.round(metrics_dict.get('val_auc', 0), 6)]
+                df_building_dict['Test AUC'] = [
+                    np.round(metrics_dict.get('test_auc', 0), 6)]
+
+        return df_building_dict, metrics_dict[f'val_{self.optimised_metric}'], metrics_dict[f'test_{self.optimised_metric}']
 
     def _train_and_test_combo(self, combo):
         """Helper to train and test each combination as part of tune()"""
@@ -804,12 +772,14 @@ class JiaoCheng:
 
         if self._tune_features == True:
             del params["features"]
-            tmp_train_x = self.train_x[list(
-                self._feature_combo_n_index_map[combo[-1]])]
-            tmp_val_x = self.val_x[list(
-                self._feature_combo_n_index_map[combo[-1]])]
-            tmp_test_x = self.test_x[list(
-                self._feature_combo_n_index_map[combo[-1]])]
+
+            features = list(self._feature_combo_n_index_map[combo[-1]])
+            if self.pytorch_graph_model:
+                features.append('idx')
+
+            tmp_train_x = self.train_x[features]
+            tmp_val_x = self.val_x[features]
+            tmp_test_x = self.test_x[features]
 
             if self.pytorch_model:
                 params["input_dim"] = len(

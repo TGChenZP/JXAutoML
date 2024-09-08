@@ -70,6 +70,7 @@ class YangZhouB_10CV:
         self.best_model_saving_address = None
         self.pytorch_model = False
         self.optimised_metric = False
+        self.pytorch_graph_model = False
 
     def read_in_data(self, train_x_list, train_y_list, val_x_list, val_y_list):
         """Reads in train validate test data for tuning"""
@@ -99,7 +100,7 @@ class YangZhouB_10CV:
         self.val_y_list = val_y_list
         print("Read in Val y data list")
 
-    def read_in_model(self, model, type, optimised_metric=None, pytorch_model=False):
+    def read_in_model(self, model, type, optimised_metric=None, pytorch_model=False, pytorch_graph_model=False):
         """Reads in underlying model object for tuning, and also read in what type of model it is"""
 
         assert type == "Classification" or type == "Regression"  # check
@@ -138,6 +139,7 @@ class YangZhouB_10CV:
         self.model = model
 
         self.pytorch_model = pytorch_model
+        self.pytorch_graph_model = pytorch_graph_model
 
         print(
             f"Successfully read in model {self.model}, which is a {self.clf_type} model optimising for {self.optimised_metric}"
@@ -726,41 +728,55 @@ class YangZhouB_10CV:
 
     def _eval_combo(self, df_building_dict, train_pred, val_pred, i):
 
+        tmp_train_y = self.train_y_list[i].copy()
+        tmp_val_y = self.val_y_list[i].copy()
+
+        if self.pytorch_graph_model:
+            target_columns = [
+                target_column for target_column in tmp_train_y.columns if target_column != 'idx']
+
+            if len(target_columns) == 1:
+                tmp_train_y = tmp_train_y[target_columns[0]]
+                tmp_val_y = tmp_val_y[target_columns[0]]
+            else:
+                tmp_train_y = tmp_train_y[target_columns]
+                tmp_val_y = tmp_val_y[target_columns]
+
         if self.clf_type == "Regression":
 
             train_score = val_score = train_rmse = val_rmse = train_mape = val_mape = 0
 
             try:
-                train_score = r2_score(self.train_y_list[i], train_pred)
+                train_score = r2_score(tmp_train_y, train_pred)
             except:
                 pass
             try:
-                val_score = r2_score(self.val_y_list[i], val_pred)
+                val_score = r2_score(tmp_val_y, val_pred)
             except:
                 pass
 
             try:
                 train_rmse = np.sqrt(
-                    mean_squared_error(self.train_y_list[i], train_pred)
+                    mean_squared_error(tmp_train_y, train_pred)
                 )
             except:
                 pass
             try:
                 val_rmse = np.sqrt(mean_squared_error(
-                    self.val_y_list[i], val_pred))
+                    tmp_val_y, val_pred))
             except:
                 pass
 
             if self.key_stats_only == False:
                 try:
                     train_mape = mean_absolute_percentage_error(
-                        self.train_y_list[i], train_pred
+                        tmp_train_y, train_pred
                     )
                 except:
                     pass
                 try:
                     val_mape = mean_absolute_percentage_error(
-                        self.val_y_list[i], val_pred
+                        tmp_val_y, val_pred
                     )
                 except:
                     pass
@@ -786,47 +802,47 @@ class YangZhouB_10CV:
             ) = val_auc = train_ap = val_ap = 0
 
             try:
-                train_score = accuracy_score(self.train_y_list[i], train_pred)
+                train_score = accuracy_score(tmp_train_y, train_pred)
             except:
                 pass
             try:
-                val_score = accuracy_score(self.val_y_list[i], val_pred)
+                val_score = accuracy_score(tmp_val_y, val_pred)
             except:
                 pass
 
             try:
                 train_f1 = f1_score(
-                    self.train_y_list[i], train_pred, average="binary")
+                    tmp_train_y, train_pred, average="binary")
             except:
                 pass
             try:
                 val_f1 = f1_score(
-                    self.val_y_list[i], val_pred, average="binary")
+                    tmp_val_y, val_pred, average="binary")
             except:
                 pass
 
             try:
                 train_precision = precision_score(
-                    self.train_y_list[i], train_pred, average="binary"
+                    tmp_train_y, train_pred, average="binary"
                 )
             except:
                 pass
             try:
                 val_precision = precision_score(
-                    self.val_y_list[i], val_pred, average="binary"
+                    tmp_val_y, val_pred, average="binary"
                 )
             except:
                 pass
 
             try:
                 train_recall = recall_score(
-                    self.train_y_list[i], train_pred, average="binary"
+                    tmp_train_y, train_pred, average="binary"
                 )
             except:
                 pass
             try:
                 val_recall = recall_score(
-                    self.val_y_list[i], val_pred, average="binary"
+                    tmp_val_y, val_pred, average="binary"
                 )
             except:
                 pass
@@ -834,31 +850,31 @@ class YangZhouB_10CV:
             if self.key_stats_only == False:
                 try:
                     train_bal_accu = balanced_accuracy_score(
-                        self.train_y_list[i], train_pred
+                        tmp_train_y, train_pred
                     )
                 except:
                     pass
                 try:
                     val_bal_accu = balanced_accuracy_score(
-                        self.val_y_list[i], val_pred)
+                        tmp_val_y, val_pred)
                 except:
                     pass
                 try:
-                    train_auc = roc_auc_score(self.train_y_list[i], train_pred)
+                    train_auc = roc_auc_score(tmp_train_y, train_pred)
                 except:
                     pass
                 try:
-                    val_auc = roc_auc_score(self.val_y_list[i], val_pred)
+                    val_auc = roc_auc_score(tmp_val_y, val_pred)
                 except:
                     pass
                 try:
                     train_ap = average_precision_score(
-                        self.train_y_list[i], train_pred)
+                        tmp_train_y, train_pred)
                 except:
                     pass
                 try:
                     val_ap = average_precision_score(
-                        self.val_y_list[i], val_pred)
+                        tmp_val_y, val_pred)
                 except:
                     pass
 
@@ -912,12 +928,12 @@ class YangZhouB_10CV:
 
             if self._tune_features == True:
                 del params["features"]
-                tmp_train_x = self.train_x_list[i][
-                    list(self._feature_combo_n_index_map[combo[-1]])
-                ]
-                tmp_val_x = self.val_x_list[i][
-                    list(self._feature_combo_n_index_map[combo[-1]])
-                ]
+                features = list(self._feature_combo_n_index_map[combo[-1]])
+                if self.pytorch_graph_model:
+                    features.append('idx')
+
+                tmp_train_x = self.train_x_list[i][features]
+                tmp_val_x = self.val_x_list[i][features]
 
                 if self.pytorch_model:
                     params["input_dim"] = len(

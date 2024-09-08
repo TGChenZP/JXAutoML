@@ -54,6 +54,7 @@ class JiaoChengB:
         self.best_model_saving_address = None
         self.pytorch_model = False
         self.optimised_metric = False
+        self.pytorch_graph_model = False
 
         self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2',
                                                 'Train rmse', 'Val rmse', 'Test rmse', 'Train mape', 'Val mape', 'Test mape', 'Time']
@@ -82,7 +83,7 @@ class JiaoChengB:
         self.test_y = test_y
         print("Read in Test y data")
 
-    def read_in_model(self, model, type, optimised_metric=None, pytorch_model=False):
+    def read_in_model(self, model, type, optimised_metric=None, pytorch_model=False, pytorch_graph_model=False):
         """ Reads in underlying model object for tuning, and also read in what type of model it is """
 
         assert type == 'Classification' or type == 'Regression'  # check
@@ -105,6 +106,7 @@ class JiaoChengB:
         self.model = model
 
         self.pytorch_model = pytorch_model
+        self.pytorch_graph_model = pytorch_graph_model
 
         print(
             f'Successfully read in model {self.model}, which is a {self.clf_type} model optimising for {self.optimised_metric}')
@@ -412,51 +414,68 @@ class JiaoChengB:
 
         metrics_dict = dd(float)
 
+        tmp_train_y = self.train_y.copy()
+        tmp_val_y = self.val_y.copy()
+        tmp_test_y = self.test_y.copy()
+
+        if self.pytorch_graph_model:
+            target_columns = [
+                target_column for target_column in self.train_y.columns if target_column != 'idx']
+
+            if len(target_columns) == 1:
+                tmp_train_y = tmp_train_y[target_columns[0]]
+                tmp_val_y = tmp_val_y[target_columns[0]]
+                tmp_test_y = tmp_test_y[target_columns[0]]
+            else:
+                tmp_train_y = tmp_train_y[target_columns]
+                tmp_val_y = tmp_val_y[target_columns]
+                tmp_test_y = tmp_test_y[target_columns]
+
         if self.clf_type == 'Regression':
 
             try:
-                metrics_dict['train_r2'] = r2_score(self.train_y, train_pred)
+                metrics_dict['train_r2'] = r2_score(tmp_train_y, train_pred)
             except:
                 pass
             try:
-                metrics_dict['val_r2'] = r2_score(self.val_y, val_pred)
+                metrics_dict['val_r2'] = r2_score(tmp_val_y, val_pred)
             except:
                 pass
             try:
-                metrics_dict['test_r2'] = r2_score(self.test_y, test_pred)
+                metrics_dict['test_r2'] = r2_score(tmp_test_y, test_pred)
             except:
                 pass
 
             try:
                 metrics_dict['train_rmse'] = np.sqrt(
-                    mean_squared_error(self.train_y, train_pred))
+                    mean_squared_error(tmp_train_y, train_pred))
             except:
                 pass
             try:
                 metrics_dict['val_rmse'] = np.sqrt(
-                    mean_squared_error(self.val_y, val_pred))
+                    mean_squared_error(tmp_val_y, val_pred))
             except:
                 pass
             try:
                 metrics_dict['test_rmse'] = np.sqrt(
-                    mean_squared_error(self.test_y, test_pred))
+                    mean_squared_error(tmp_test_y, test_pred))
             except:
                 pass
 
             if self.key_stats_only == True:
                 try:
                     metrics_dict['train_mape'] = mean_absolute_percentage_error(
-                        self.train_y, train_pred)
+                        tmp_train_y, train_pred)
                 except:
                     pass
                 try:
                     metrics_dict['val_mape'] = mean_absolute_percentage_error(
-                        self.val_y, val_pred)
+                        tmp_val_y, val_pred)
                 except:
                     pass
                 try:
                     metrics_dict['test_mape'] = mean_absolute_percentage_error(
-                        self.test_y, test_pred)
+                        tmp_test_y, test_pred)
                 except:
                     pass
 
@@ -485,114 +504,114 @@ class JiaoChengB:
 
             try:
                 metrics_dict['train_accuracy'] = accuracy_score(
-                    self.train_y, train_pred)
+                    tmp_train_y, train_pred)
             except:
                 pass
             try:
                 metrics_dict['val_accuracy'] = accuracy_score(
-                    self.val_y, val_pred)
+                    tmp_val_y, val_pred)
             except:
                 pass
             try:
                 metrics_dict['test_accuracy'] = accuracy_score(
-                    self.test_y, test_pred)
+                    tmp_test_y, test_pred)
             except:
                 pass
 
             try:
                 metrics_dict['train_f1'] = f1_score(
-                    self.train_y, train_pred, average='weighted')
+                    tmp_train_y, train_pred, average='weighted')
             except:
                 pass
             try:
                 metrics_dict['val_f1'] = f1_score(
-                    self.val_y, val_pred, average='weighted')
+                    tmp_val_y, val_pred, average='weighted')
             except:
                 pass
             try:
                 metrics_dict['test_f1'] = f1_score(
-                    self.test_y, test_pred, average='weighted')
+                    tmp_test_y, test_pred, average='weighted')
             except:
                 pass
 
             try:
                 metrics_dict['train_precision'] = precision_score(
-                    self.train_y, train_pred, average='weighted')
+                    tmp_train_y, train_pred, average='weighted')
             except:
                 pass
             try:
                 metrics_dict['val_precision'] = precision_score(
-                    self.val_y, val_pred, average='weighted')
+                    tmp_val_y, val_pred, average='weighted')
             except:
                 pass
             try:
                 metrics_dict['test_precision'] = precision_score(
-                    self.test_y, test_pred, average='weighted')
+                    tmp_test_y, test_pred, average='weighted')
             except:
                 pass
 
             try:
                 metrics_dict['train_recall'] = recall_score(
-                    self.train_y, train_pred, average='weighted')
+                    tmp_train_y, train_pred, average='weighted')
             except:
                 pass
             try:
                 metrics_dict['val_recall'] = recall_score(
-                    self.val_y, val_pred, average='weighted')
+                    tmp_val_y, val_pred, average='weighted')
             except:
                 pass
             try:
                 metrics_dict['test_recall'] = recall_score(
-                    self.test_y, test_pred, average='weighted')
+                    tmp_test_y, test_pred, average='weighted')
             except:
                 pass
 
             if self.key_stats_only == True:
                 try:
                     metrics_dict['train_bal_accu'] = balanced_accuracy_score(
-                        self.train_y, train_pred)
+                        tmp_train_y, train_pred)
                 except:
                     pass
                 try:
                     metrics_dict['val_bal_accu'] = balanced_accuracy_score(
-                        self.val_y, val_pred)
+                        tmp_val_y, val_pred)
                 except:
                     pass
                 try:
                     metrics_dict['test_bal_accu'] = balanced_accuracy_score(
-                        self.test_y, test_pred)
+                        tmp_test_y, test_pred)
                 except:
                     pass
 
                 try:
                     metrics_dict['train_ap'] = average_precision_score(
-                        self.train_y, train_pred)
+                        tmp_train_y, train_pred)
                 except:
                     pass
                 try:
                     metrics_dict['val_ap'] = average_precision_score(
-                        self.val_y, val_pred)
+                        tmp_val_y, val_pred)
                 except:
                     pass
                 try:
                     metrics_dict['test_ap'] = average_precision_score(
-                        self.test_y, test_pred)
+                        tmp_test_y, test_pred)
                 except:
                     pass
 
                 try:
                     metrics_dict['train_auc'] = roc_auc_score(
-                        self.train_y, train_pred)
+                        tmp_train_y, train_pred)
                 except:
                     pass
                 try:
                     metrics_dict['val_auc'] = roc_auc_score(
-                        self.val_y, val_pred)
+                        tmp_val_y, val_pred)
                 except:
                     pass
                 try:
                     metrics_dict['test_auc'] = roc_auc_score(
-                        self.test_y, test_pred)
+                        tmp_test_y, test_pred)
                 except:
                     pass
 
@@ -653,12 +672,14 @@ class JiaoChengB:
 
         if self._tune_features == True:
             del params['features']
-            tmp_train_x = self.train_x[list(
-                self._feature_combo_n_index_map[combo[-1]])]
-            tmp_val_x = self.val_x[list(
-                self._feature_combo_n_index_map[combo[-1]])]
-            tmp_test_x = self.test_x[list(
-                self._feature_combo_n_index_map[combo[-1]])]
+
+            features = list(self._feature_combo_n_index_map[combo[-1]])
+            if self.pytorch_graph_model:
+                features.append('idx')
+
+            tmp_train_x = self.train_x[features]
+            tmp_val_x = self.val_x[features]
+            tmp_test_x = self.test_x[features]
 
             if self.pytorch_model:
                 params['input_dim'] = len(
