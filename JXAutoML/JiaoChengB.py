@@ -758,7 +758,18 @@ class JiaoChengB:
 
         self._up_to += 1
 
-        print(f'''Trained and Tested combination {self._up_to} of {self._total_combos}: {combo}, taking {np.round(time_used,2)} seconds to get val score of {np.round(val_score,4)}
+        tuned_hyperparameters = {
+            self.hyperparameters[i]: self.parameter_choices[self.hyperparameters[i]][
+                combo[i]
+            ]
+            for i in range(len(self.hyperparameters) - 1 if self._tune_features else len(self.hyperparameters))
+        }
+
+        if self._tune_features:
+            tuned_hyperparameters["features"] = combo[-1]
+            
+
+        print(f'''Trained and Tested combination {self._up_to} of {self._total_combos}: {tuned_hyperparameters}, taking {np.round(time_used,2)} seconds to get val score of {np.round(val_score,4)}
         Current best combo: {self.best_combo} with val score {np.round(self.best_score, 4)}''')
 
     def _check_already_trained_best_score(self, combo):
@@ -774,7 +785,17 @@ class JiaoChengB:
                 f"As new Best Combo {combo} was read in, best_clf is set to None")
             self.best_combo = combo
 
-        print(f'''Already Trained and Tested combination {combo}, which had val score of {np.round(self.result[combo],4)}
+        tuned_hyperparameters = {
+            self.hyperparameters[i]: self.parameter_choices[self.hyperparameters[i]][
+                combo[i]
+            ]
+            for i in range(len(self.hyperparameters) - 1 if self._tune_features else len(self.hyperparameters))
+        }
+
+        if self._tune_features:
+            tuned_hyperparameters["features"] = combo[-1]
+
+        print(f'''Already Trained and Tested combination {tuned_hyperparameters}, which had val score of {np.round(self.result[combo],4)}
         Current best combo: {self.best_combo} with val score {np.round(self.best_score, 4)}. 
         Has trained {self._up_to} of {self._total_combos} combinations so far''')
 
