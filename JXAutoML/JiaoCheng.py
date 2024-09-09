@@ -882,8 +882,10 @@ class JiaoCheng:
             best_hyperparameters["features"] = self.best_combo[-1]
 
         print(
-            f"""Trained and Tested combination {self._up_to} of {self._total_combos}: {tuned_hyperparameters}, taking {np.round(time_used,2)} seconds to get val score of {np.round(val_score,4)}
-        Current best combo: {best_hyperparameters} with val score {np.round(self.best_score, 4)}"""
+            f"""Trained and Tested combination {self._up_to} of {self._total_combos}, taking {np.round(time_used,2)} seconds to get val score of {np.round(val_score,4)}: 
+                {tuned_hyperparameters}, 
+            Current best combo with val score {np.round(self.best_score, 4)}: 
+                    {best_hyperparameters} """
         )
 
     def _check_already_trained_best_score(self, combo):
@@ -918,8 +920,10 @@ class JiaoCheng:
             best_hyperparameters["features"] = self.best_combo[-1]
 
         print(
-            f"""Already Trained and Tested combination {tuned_hyperparameters}, which had val score of {np.round(self.result[combo],4)}
-        Current best combo: {best_hyperparameters} with val score {np.round(self.best_score, 4)}. 
+            f"""Already Trained and Tested combination (val score of {np.round(self.result[combo],4)}):
+            {tuned_hyperparameters}
+            Current best combo (with val score {np.round(self.best_score, 4)}):
+                    {best_hyperparameters} 
         Has trained {self._up_to} of {self._total_combos} combinations so far"""
         )
 
