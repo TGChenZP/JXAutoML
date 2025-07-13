@@ -13,6 +13,7 @@ from sklearn.metrics import (
     balanced_accuracy_score,
     roc_auc_score,
     average_precision_score,
+    log_loss
 )
 
 
@@ -105,7 +106,8 @@ class JiaoCheng_10CV:
                 "balanced_accuracy",
                 "AP",
                 "AUC",
-            ], "evaluation_metric for classification must be one of ['accuracy', 'f1', 'precision', 'recall', 'balanced_accuracy', 'AP', 'AUC']"
+                'log_loss',
+            ], "evaluation_metric for classification must be one of ['accuracy', 'f1', 'precision', 'recall', 'balanced_accuracy', 'AP', 'AUC', 'log_loss]"
         if self.clf_type == "Regression":
             assert optimised_metric in [
                 None,
@@ -575,6 +577,15 @@ class JiaoCheng_10CV:
             except:
                 pass
 
+            try:
+                train_log_loss = log_loss(tmp_train_y, train_pred)
+            except:
+                pass
+            try:
+                val_log_loss = log_loss(tmp_val_y, val_pred)
+            except:
+                pass
+
             if self.key_stats_only == False:
                 try:
                     train_bal_accu = balanced_accuracy_score(
@@ -621,6 +632,11 @@ class JiaoCheng_10CV:
                              f" {i}"] = [np.round(train_recall, 6)]
             df_building_dict["Val recall" +
                              f" {i}"] = [np.round(val_recall, 6)]
+
+            df_building_dict['Train log_loss' +
+                             f" {i}"] = [np.round(train_log_loss, 6)]
+            df_building_dict['Val log_loss' +
+                             f" {i}"] = [np.round(val_log_loss, 6)]
 
             if self.key_stats_only == False:
                 df_building_dict["Train balanced_accuracy" + f" {i}"] = [

@@ -14,6 +14,7 @@ from sklearn.metrics import (
     balanced_accuracy_score,
     average_precision_score,
     roc_auc_score,
+    log_loss
 )
 
 
@@ -92,6 +93,9 @@ class JiaoCheng:
             "Train recall",
             "Val recall",
             "Test recall",
+            'Train log_loss',
+            'Val log_loss',
+            'Test log_loss',
             "Time",
         ]
 
@@ -133,7 +137,8 @@ class JiaoCheng:
                 "balanced_accuracy",
                 "AP",
                 "AUC",
-            ], "evaluation_metric for classification must be one of ['accuracy', 'f1', 'precision', 'recall', 'balanced_accuracy', 'AP', 'AUC']"
+                'log_loss'
+            ], "evaluation_metric for classification must be one of ['accuracy', 'f1', 'precision', 'recall', 'balanced_accuracy', 'AP', 'AUC', 'log_loss']"
         if self.clf_type == "Regression":
             assert optimised_metric in [
                 None,
@@ -558,7 +563,7 @@ class JiaoCheng:
             except:
                 pass
 
-            if self.key_stats_only == True:
+            if self.key_stats_only == False:
                 try:
                     metrics_dict['train_mape'] = mean_absolute_percentage_error(
                         tmp_train_y, train_pred)
@@ -588,7 +593,7 @@ class JiaoCheng:
             df_building_dict['Test rmse'] = [
                 np.round(metrics_dict.get('test_rmse', 0), 6)]
 
-            if self.key_stats_only == True:
+            if self.key_stats_only == False:
                 df_building_dict['Train mape'] = [
                     np.round(metrics_dict.get('train_mape', 0), 6)]
                 df_building_dict['Val mape'] = [
@@ -662,7 +667,21 @@ class JiaoCheng:
             except:
                 pass
 
-            if self.key_stats_only == True:
+            try:
+                metrics_dict['train_log_loss'] = log_loss(
+                    tmp_train_y, train_pred)
+            except:
+                pass
+            try:
+                metrics_dict['val_log_loss'] = log_loss(tmp_val_y, val_pred)
+            except:
+                pass
+            try:
+                metrics_dict['test_log_loss'] = log_loss(tmp_test_y, test_pred)
+            except:
+                pass
+
+            if self.key_stats_only == False:
                 try:
                     metrics_dict['train_bal_accu'] = balanced_accuracy_score(
                         tmp_train_y, train_pred)
@@ -735,8 +754,14 @@ class JiaoCheng:
                 np.round(metrics_dict.get('val_recall', 0), 6)]
             df_building_dict['Test recall'] = [
                 np.round(metrics_dict.get('test_recall', 0), 6)]
+            df_building_dict['Train log_loss'] = [
+                np.round(metrics_dict.get('train_log_loss', 0), 6)]
+            df_building_dict['Val log_loss'] = [
+                np.round(metrics_dict.get('val_log_loss', 0), 6)]
+            df_building_dict['Test log_loss'] = [
+                np.round(metrics_dict.get('test_log_loss', 0), 6)]
 
-            if self.key_stats_only == True:
+            if self.key_stats_only == False:
                 df_building_dict['Train balanced_accuracy'] = [
                     np.round(metrics_dict.get('train_bal_accu', 0), 6)]
                 df_building_dict['Val balanced_accuracy'] = [

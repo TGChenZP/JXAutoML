@@ -418,7 +418,8 @@ def local_test():
     y_reg_series = pd.Series(y_reg, name="target")
 
     X_reg_df_train, X_reg_df_valtest, y_reg_series_train, y_reg_series_valtest = (
-        train_test_split(X_reg_df, y_reg_series, test_size=0.3, random_state=42)
+        train_test_split(X_reg_df, y_reg_series,
+                         test_size=0.3, random_state=42)
     )
     X_reg_df_val, X_reg_df_test, y_reg_series_val, y_reg_series_test = train_test_split(
         X_reg_df_valtest, y_reg_series_valtest, test_size=0.5, random_state=42
@@ -433,7 +434,8 @@ def local_test():
         random_state=42,
     )
     X_class_2_df = pd.DataFrame(
-        X_class_2, columns=[f"feature_{i+1}" for i in range(X_class_2.shape[1])]
+        X_class_2, columns=[
+            f"feature_{i+1}" for i in range(X_class_2.shape[1])]
     )
     y_class_2_series = pd.Series(y_class_2, name="target")
 
